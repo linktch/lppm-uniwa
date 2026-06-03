@@ -1,0 +1,754 @@
+/* ========================================
+   ACADEMIC UI SYSTEM - Compatible with AdminLTE
+   ======================================== */
+
+/* ------------------------------
+   VARIABLES & THEME
+   ------------------------------ */
+:root {
+    /* Primary Colors */
+    --primary-dark: #1e3a5f;
+    --primary: #2c7da0;
+    --primary-light: #61a5c2;
+    --primary-gradient: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    
+    /* Secondary Colors */
+    --secondary-dark: #0f766e;
+    --secondary: #14b8a6;
+    --secondary-light: #5eead4;
+    --secondary-gradient: linear-gradient(135deg, var(--secondary-dark), var(--secondary));
+    
+    /* Status Colors */
+    --success: #10b981;
+    --success-light: #d1fae5;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --info: #3b82f6;
+    --info-light: #dbeafe;
+    
+    /* Neutral Colors */
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    /* Border Radius */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ------------------------------
+   CARDS - Academic Style
+   ------------------------------ */
+.academic-card {
+    background: #ffffff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    margin-bottom: var(--spacing-lg);
+}
+
+.academic-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+.academic-card-header {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.academic-card-header-primary {
+    background: var(--primary-gradient);
+    color: #ffffff;
+}
+
+.academic-card-header-secondary {
+    background: var(--secondary-gradient);
+    color: #ffffff;
+}
+
+.academic-card-header-white {
+    background: #ffffff;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.academic-card-body {
+    padding: var(--spacing-xl);
+}
+
+.academic-card-footer {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+/* Card with gradient header */
+.card-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #ffffff;
+}
+
+.card-gradient-secondary {
+    background: linear-gradient(135deg, var(--secondary-dark), var(--secondary));
+    color: #ffffff;
+}
+
+/* Card Title */
+.card-title-academic {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: 0;
+}
+
+.card-title-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-title-icon i {
+    font-size: 1.25rem;
+}
+
+.card-title-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.card-title-subtitle {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin: 0;
+}
+
+.card-description {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* ------------------------------
+   BUTTONS - Academic Style
+   ------------------------------ */
+.btn-academic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    border-radius: var(--radius-lg);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+}
+
+.btn-academic i {
+    font-size: 0.875rem;
+}
+
+.btn-academic:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.btn-academic:active {
+    transform: translateY(0);
+}
+
+/* Button Variants */
+.btn-primary-academic {
+    background: var(--primary-gradient);
+    color: #ffffff;
+}
+
+.btn-primary-academic:hover {
+    box-shadow: 0 4px 12px rgba(44, 125, 160, 0.3);
+    color: #ffffff;
+}
+
+.btn-secondary-academic {
+    background: var(--secondary-gradient);
+    color: #ffffff;
+}
+
+.btn-secondary-academic:hover {
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+    color: #ffffff;
+}
+
+.btn-outline-primary-academic {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary-academic:hover {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.btn-danger-academic {
+    background: var(--danger);
+    color: #ffffff;
+}
+
+.btn-danger-academic:hover {
+    background: #dc2626;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-success-academic {
+    background: var(--success);
+    color: #ffffff;
+}
+
+.btn-success-academic:hover {
+    background: #059669;
+}
+
+/* Button Sizes */
+.btn-sm-academic {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.btn-lg-academic {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+.btn-block-academic {
+    width: 100%;
+}
+
+/* Action Buttons (for tables) */
+.action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: transparent;
+}
+
+.action-btn-edit {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.action-btn-edit:hover {
+    background: var(--warning);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.action-btn-delete {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.action-btn-delete:hover {
+    background: var(--danger);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.action-btn-view {
+    background: var(--info-light);
+    color: var(--info);
+}
+
+.action-btn-view:hover {
+    background: var(--info);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Tooltip for action buttons */
+.action-btn .tooltip-text {
+    visibility: hidden;
+    background: var(--gray-800);
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.action-btn:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* ------------------------------
+   FORM ELEMENTS - Academic Style
+   ------------------------------ */
+.form-group-academic {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-label-academic {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: var(--spacing-sm);
+}
+
+.form-label-required::after {
+    content: '*';
+    color: var(--danger);
+    margin-left: var(--spacing-xs);
+}
+
+.form-control-academic {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.form-control-academic:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(44, 125, 160, 0.1);
+}
+
+.form-control-error {
+    border-color: var(--danger);
+}
+
+/* Input with icon */
+.input-icon-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+}
+
+.input-icon-wrapper .form-control-academic {
+    padding-left: 2.25rem;
+}
+
+/* Error Message */
+.error-message-academic {
+    color: var(--danger);
+    font-size: 0.75rem;
+    margin-top: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+/* Status Option (Custom Radio) */
+.status-option-group {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.status-option {
+    flex: 1;
+    cursor: pointer;
+}
+
+.status-option input {
+    display: none;
+}
+
+.status-option input:checked + .status-label {
+    border-width: 2px;
+}
+
+.status-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 0.625rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-300);
+    background: var(--gray-50);
+    transition: all var(--transition-base);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-wajib {
+    color: var(--success);
+}
+
+.status-wajib:hover,
+.status-option input:checked + .status-wajib {
+    border-color: var(--success);
+    background: var(--success-light);
+}
+
+.status-tidak {
+    color: var(--danger);
+}
+
+.status-tidak:hover,
+.status-option input:checked + .status-tidak {
+    border-color: var(--danger);
+    background: var(--danger-light);
+}
+
+/* ------------------------------
+   TABLES - Academic Style
+   ------------------------------ */
+.table-wrapper-academic {
+    overflow-x: auto;
+}
+
+.academic-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.academic-table thead tr {
+    background: var(--gray-50);
+}
+
+.academic-table th {
+    padding: 0.875rem var(--spacing-lg);
+    text-align: left;
+    font-weight: 600;
+    color: var(--gray-700);
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.academic-table td {
+    padding: 0.875rem var(--spacing-lg);
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: middle;
+}
+
+.academic-table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+/* Table with card style */
+.table-card-academic {
+    background: #ffffff;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+/* Empty State */
+.empty-state-academic {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--gray-400);
+}
+
+.empty-state-academic i {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.empty-state-academic p {
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.empty-state-academic small {
+    font-size: 0.75rem;
+}
+
+/* ------------------------------
+   BADGES & STATUS
+   ------------------------------ */
+.badge-academic {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-success-academic {
+    background: var(--success-light);
+    color: #065f46;
+}
+
+.badge-danger-academic {
+    background: var(--danger-light);
+    color: #991b1b;
+}
+
+.badge-warning-academic {
+    background: var(--warning-light);
+    color: #92400e;
+}
+
+.badge-info-academic {
+    background: var(--info-light);
+    color: #1e40af;
+}
+
+.badge-primary-academic {
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
+/* Stat Badge */
+.stat-badge {
+    background: var(--gray-100);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gray-600);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+/* ------------------------------
+   MODAL - Academic Style (Tanpa Bootstrap)
+   ------------------------------ */
+.modal-academic {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.modal-academic-content {
+    background: #ffffff;
+    border-radius: var(--radius-xl);
+    max-width: 550px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-academic-header {
+    background: var(--primary-gradient);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-academic-header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.modal-academic-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+}
+
+.modal-academic-title {
+    color: #ffffff;
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.modal-academic-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+.modal-academic-close {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: opacity var(--transition-base);
+}
+
+.modal-academic-close:hover {
+    opacity: 0.7;
+}
+
+.modal-academic-body {
+    padding: var(--spacing-xl);
+}
+
+.modal-academic-footer {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+}
+
+/* ------------------------------
+   UTILITIES
+   ------------------------------ */
+/* Spacing */
+.m-0 { margin: 0; }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+.mt-1 { margin-top: var(--spacing-xs); }
+.mb-1 { margin-bottom: var(--spacing-xs); }
+.mt-2 { margin-top: var(--spacing-sm); }
+.mb-2 { margin-bottom: var(--spacing-sm); }
+.mt-3 { margin-top: var(--spacing-md); }
+.mb-3 { margin-bottom: var(--spacing-md); }
+.mt-4 { margin-top: var(--spacing-lg); }
+.mb-4 { margin-bottom: var(--spacing-lg); }
+.mt-5 { margin-top: var(--spacing-xl); }
+.mb-5 { margin-bottom: var(--spacing-xl); }
+
+/* Padding */
+.p-0 { padding: 0; }
+.p-3 { padding: var(--spacing-md); }
+.p-4 { padding: var(--spacing-lg); }
+.p-5 { padding: var(--spacing-xl); }
+
+/* Text Alignment */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+/* Text Colors */
+.text-primary { color: var(--primary); }
+.text-secondary { color: var(--secondary); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-gray { color: var(--gray-600); }
+.text-muted { color: var(--gray-500); }
+
+/* Font Weights */
+.font-light { font-weight: 300; }
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+/* Display */
+.d-flex { display: flex; }
+.d-inline-flex { display: inline-flex; }
+.d-block { display: block; }
+.d-none { display: none; }
+
+/* Flex Utilities */
+.flex-column { flex-direction: column; }
+.align-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-1 { gap: var(--spacing-xs); }
+.gap-2 { gap: var(--spacing-sm); }
+.gap-3 { gap: var(--spacing-md); }
+.gap-4 { gap: var(--spacing-lg); }
+
+/* Width */
+.w-100 { width: 100%; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .academic-card-header,
+    .academic-card-body,
+    .academic-card-footer {
+        padding: var(--spacing-md);
+    }
+    
+    .academic-table th,
+    .academic-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .status-option-group {
+        flex-direction: column;
+    }
+    
+    .btn-academic {
+        padding: 0.375rem 0.875rem;
+        font-size: 0.75rem;
+    }
+    
+    .modal-academic-content {
+        width: 95%;
+        margin: var(--spacing-md);
+    }
+}
