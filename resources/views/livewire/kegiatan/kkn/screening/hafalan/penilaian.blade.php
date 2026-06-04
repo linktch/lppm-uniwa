@@ -13,7 +13,7 @@
                     </div>
                 </div>
                 <a href="{{ route('kegiatan.kkn.screening.hafalan.index', ['role' => $role]) }}" 
-                   wire:navigate 
+                   wire:navigate
                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm font-medium transition">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
@@ -30,20 +30,20 @@
         </div>
         <div class="relative w-full md:w-72">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-            <input type="text" 
-                   class="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                   placeholder="Cari mahasiswa (Nama/NIM)..." 
-                   wire:model.live="search">
+            <input type="text"
+                class="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Cari mahasiswa (Nama/NIM)..." 
+                wire:model.live="search">
             @if($search)
-            <button wire:click="$set('search', '')" 
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button wire:click="$set('search', '')"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times text-xs"></i>
             </button>
             @endif
         </div>
     </div>
 
-    <!-- Tabel Mahasiswa -->
+    <!-- Tabel Mahasiswa dengan Progress Bar -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
             <div class="flex flex-wrap items-center gap-3">
@@ -52,12 +52,12 @@
                 </div>
                 <h5 class="font-semibold text-gray-800">Daftar Mahasiswa Peserta KKN</h5>
                 <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                    Menampilkan {{ $mahasiswas->firstItem() }} - {{ $mahasiswas->lastItem() }} 
+                    Menampilkan {{ $mahasiswas->firstItem() }} - {{ $mahasiswas->lastItem() }}
                     dari {{ $mahasiswas->total() }} Mahasiswa
                 </span>
             </div>
         </div>
-        
+
         <div class="p-5">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -69,6 +69,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prodi</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Kelompok</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Jenis Kelamin</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-44">Progress</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Aksi</th>
                         </tr>
                     </thead>
@@ -95,9 +96,54 @@
                                 </span>
                                 @endif
                             </td>
+                            <!-- Kolom Progress -->
+                            <td class="px-4 py-3">
+                                @php
+                                    $progress = $mahasiswa->progress ?? 0;
+                                    $sudahDinilai = $mahasiswa->sudah_dinilai ?? 0;
+                                    $totalIndikator = $mahasiswa->total_indikator ?? 0;
+                                    $totalNilai = $mahasiswa->total_nilai ?? 0;
+                                    $maxNilai = $mahasiswa->max_nilai ?? 0;
+                                @endphp
+                                <div class="w-full min-w-[180px]">
+                                    <!-- Progress Label -->
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-xs font-medium text-gray-600">Progress</span>
+                                        <span class="text-xs font-semibold 
+                                            {{ $progress < 30 ? 'text-red-600' : '' }}
+                                            {{ $progress >= 30 && $progress < 70 ? 'text-yellow-600' : '' }}
+                                            {{ $progress >= 70 ? 'text-green-600' : '' }}">
+                                            {{ $progress }}%
+                                        </span>
+                                    </div>
+
+                                    <!-- Progress Bar dengan Warna Dinamis (Gradient) -->
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+                                        <div class="h-2.5 rounded-full transition-all duration-500" 
+                                             style="width: {{ $progress }}%; min-width: 4%;
+                                                    background: linear-gradient(90deg, 
+                                                        #ef4444 0%, 
+                                                        #f59e0b 50%, 
+                                                        #10b981 100%);">
+                                        </div>
+                                    </div>
+
+                                    <!-- Detail Stats -->
+                                    <div class="flex justify-between items-center mt-1.5">
+                                        <div class="flex items-center gap-1">
+                                            <i class="fas fa-check-circle text-green-500 text-xs"></i>
+                                            <span class="text-xs text-gray-500">{{ $sudahDinilai }}/{{ $totalIndikator }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <i class="fas fa-star text-yellow-500 text-xs"></i>
+                                            <span class="text-xs text-gray-500">{{ $totalNilai }}/{{ $maxNilai }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                             <td class="px-4 py-3 text-center">
-                                <a wire:navigate 
-                                   href="{{ route('kegiatan.kkn.screening.hafalan.penilaian.detail', ['role' => $role, 'mahasiswaId' => $mahasiswa->id]) }}" 
+                                <a wire:navigate
+                                   href="{{ route('kegiatan.kkn.screening.hafalan.penilaian.detail', ['role' => $role, 'mahasiswaId' => $mahasiswa->id]) }}"
                                    class="inline-flex items-center justify-center w-9 h-9 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 rounded-lg transition group relative">
                                     <i class="fas fa-star"></i>
                                     <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
@@ -108,7 +154,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
+                            <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center gap-2">
                                     <i class="fas fa-users text-gray-400 text-5xl"></i>
                                     <p class="text-gray-500">Tidak ada data mahasiswa</p>

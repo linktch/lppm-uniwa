@@ -142,12 +142,12 @@
     </form>
 
     <!-- SweetAlert Script -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script data-navigate-once src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @livewireScripts
     @stack('scripts')
 
-    <script>
+    <script data-navigate-once>
     // ==================== SIDEBAR TOGGLE ====================
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -234,7 +234,7 @@
         }
     });
     </script>
-    <script>
+    <script data-navigate-once>
     document.addEventListener('livewire:initialized', () => {
 
         Livewire.on('show-delete-confirm', () => {

@@ -97,6 +97,28 @@
             </div>
         </div>
 
+        <!-- Card DOKUMEN SAYA (TAMBAHAN) -->
+        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-500 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                        <i class="fas fa-folder-open text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg">Dokumen Saya</h3>
+                </div>
+            </div>
+            <div class="p-5">
+                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
+                    Kelola dokumen persyaratan KKN seperti KTP, KK, Ijazah, dan dokumen lainnya.
+                </p>
+                <a href="{{ route('kegiatan.kkn.dokumen.index', auth()->user()->role) }}"
+                    class="block w-full text-center bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
+                    wire:navigate>
+                    <i class="fas fa-arrow-right mr-2"></i> Kelola Dokumen
+                </a>
+            </div>
+        </div>
+
         <!-- Card Kesehatan Mahasiswa -->
         <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
             <div class="bg-gradient-to-r from-red-500 to-red-400 p-4">

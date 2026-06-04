@@ -19,6 +19,7 @@ use App\Livewire\Kegiatan\Kkn\Laporanharian\Create as LaporanHarianKKNCreate;
 use App\Livewire\Kegiatan\Kkn\Laporanharian\View as LaporanHarianKKNView;
 use App\Livewire\Kegiatan\Kkn\Laporanharian\Update as LaporanHarianKKNUpdate;
 
+use App\Livewire\Kegiatan\Kkn\Dokumen\Index as DokumenKKNIndex;
 
 // Define role pattern untuk KKN
 $kknRoles = 'superadmin|prodi|mitra|mahasiswa|kemahasiswaan|dosen';
@@ -127,6 +128,20 @@ Route::group([
     'where' => ['role' => $kknRoles]
 ], function () {
     Route::get('/', TimelineKKNIndex::class)->name('index');
+});
+
+
+/*
+ * |--------------------------------------------------------------------------
+ * | DOKUMEN SAYA KKN
+ * |--------------------------------------------------------------------------
+ */
+Route::group([
+    'prefix' => '{role}/kegiatan/KKN/dokumen',
+    'as' => 'kegiatan.kkn.dokumen.',
+    'where' => ['role' => $kknRoles]
+], function () {
+    Route::get('/', DokumenKKNIndex::class)->name('index');
 });
 
 /*

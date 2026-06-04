@@ -52,9 +52,9 @@ class Login extends Component
             session()->regenerate();
 
             // ✅ CEK NIM MAHASISWA
-            if (!$this->checkMahasiswaNim()) {
-                return;
-            }
+            // if (!$this->checkMahasiswaNim()) {
+            //     return;
+            // }
 
             return redirect()->route('dashboard');
         }
@@ -66,9 +66,9 @@ class Login extends Component
             session()->regenerate();
 
             // ✅ CEK NIM MAHASISWA
-            if (!$this->checkMahasiswaNim()) {
-                return;
-            }
+            // if (!$this->checkMahasiswaNim()) {
+            //     return;
+            // }
 
             return redirect()->route('dashboard');
         }
