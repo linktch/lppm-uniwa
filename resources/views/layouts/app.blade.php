@@ -144,95 +144,129 @@
     <!-- SweetAlert Script -->
     <script data-navigate-once src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    @livewireScripts
     @stack('scripts')
+    @livewireScripts
+
 
     <script data-navigate-once>
-    // ==================== SIDEBAR TOGGLE ====================
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const toggleBtn = document.getElementById('sidebarToggle');
+    (function() {
 
-    function openSidebar() {
-        sidebar.classList.remove('-translate-x-full');
-        sidebar.classList.add('translate-x-0');
-        if (window.innerWidth < 1024) {
-            overlay.classList.remove('opacity-0', 'pointer-events-none');
-            overlay.classList.add('opacity-100', 'pointer-events-auto');
+        function openSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (!sidebar) return;
+
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+
+            if (window.innerWidth < 1024 && overlay) {
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                overlay.classList.add('opacity-100', 'pointer-events-auto');
+            }
         }
-    }
 
-    function closeSidebar() {
-        sidebar.classList.add('-translate-x-full');
-        sidebar.classList.remove('translate-x-0');
-        if (window.innerWidth < 1024) {
-            overlay.classList.add('opacity-0', 'pointer-events-none');
-            overlay.classList.remove('opacity-100', 'pointer-events-auto');
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (!sidebar) return;
+
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+
+            if (window.innerWidth < 1024 && overlay) {
+                overlay.classList.add('opacity-0', 'pointer-events-none');
+                overlay.classList.remove('opacity-100', 'pointer-events-auto');
+            }
         }
-    }
 
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (sidebar.classList.contains('-translate-x-full')) {
-                openSidebar();
+        function resetSidebarState() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (!sidebar) return;
+
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('-translate-x-full', 'translate-x-0');
+
+                if (overlay) {
+                    overlay.classList.add('opacity-0', 'pointer-events-none');
+                    overlay.classList.remove('opacity-100', 'pointer-events-auto');
+                }
             } else {
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
+            }
+        }
+
+        // Toggle sidebar (event delegation)
+        document.addEventListener('click', function(e) {
+
+            const toggleBtn = e.target.closest('#sidebarToggle');
+
+            if (toggleBtn) {
+                e.preventDefault();
+
+                const sidebar = document.getElementById('sidebar');
+
+                if (!sidebar) return;
+
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    openSidebar();
+                } else {
+                    closeSidebar();
+                }
+
+                return;
+            }
+
+            const overlay = e.target.closest('#sidebarOverlay');
+
+            if (overlay) {
                 closeSidebar();
             }
         });
-    }
 
-    if (overlay) {
-        overlay.addEventListener('click', closeSidebar);
-    }
+        // Dropdown Notifikasi & User
+        document.addEventListener('click', function(e) {
 
-    window.addEventListener('resize', () => {
-        if (window.innerWidth >= 1024) {
-            sidebar.classList.remove('-translate-x-full', 'translate-x-0');
-            overlay.classList.add('opacity-0', 'pointer-events-none');
-        } else {
-            sidebar.classList.add('-translate-x-full');
-            sidebar.classList.remove('translate-x-0');
-        }
-    });
+            const notifButton = document.getElementById('notifButton');
+            const notifDropdown = document.getElementById('notifDropdown');
 
-    if (window.innerWidth < 1024) {
-        sidebar.classList.add('-translate-x-full');
-        sidebar.classList.remove('translate-x-0');
-    } else {
-        sidebar.classList.remove('-translate-x-full', 'translate-x-0');
-    }
+            const userButton = document.getElementById('userButton');
+            const userDropdown = document.getElementById('userDropdown');
 
-    // ==================== DROPDOWN NOTIFIKASI & USER ====================
-    const notifButton = document.getElementById('notifButton');
-    const notifDropdown = document.getElementById('notifDropdown');
-    const userButton = document.getElementById('userButton');
-    const userDropdown = document.getElementById('userDropdown');
+            if (e.target.closest('#notifButton')) {
 
-    if (notifButton && notifDropdown) {
-        notifButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notifDropdown.classList.toggle('hidden');
-            if (userDropdown) userDropdown.classList.add('hidden');
+                notifDropdown?.classList.toggle('hidden');
+                userDropdown?.classList.add('hidden');
+
+                return;
+            }
+
+            if (e.target.closest('#userButton')) {
+
+                userDropdown?.classList.toggle('hidden');
+                notifDropdown?.classList.add('hidden');
+
+                return;
+            }
+
+            notifDropdown?.classList.add('hidden');
+            userDropdown?.classList.add('hidden');
         });
-    }
 
-    if (userButton && userDropdown) {
-        userButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userDropdown.classList.toggle('hidden');
-            if (notifDropdown) notifDropdown.classList.add('hidden');
-        });
-    }
+        // Initial load
+        document.addEventListener('DOMContentLoaded', resetSidebarState);
 
-    document.addEventListener('click', (e) => {
-        if (notifDropdown && !notifButton?.contains(e.target)) {
-            notifDropdown.classList.add('hidden');
-        }
-        if (userDropdown && !userButton?.contains(e.target)) {
-            userDropdown.classList.add('hidden');
-        }
-    });
+        // Saat Livewire navigate selesai
+        document.addEventListener('livewire:navigated', resetSidebarState);
+
+        // Resize browser
+        window.addEventListener('resize', resetSidebarState);
+
+    })();
     </script>
     <script data-navigate-once>
     document.addEventListener('livewire:initialized', () => {

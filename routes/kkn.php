@@ -21,6 +21,9 @@ use App\Livewire\Kegiatan\Kkn\Laporanharian\Update as LaporanHarianKKNUpdate;
 
 use App\Livewire\Kegiatan\Kkn\Dokumen\Index as DokumenKKNIndex;
 
+use App\Http\Controllers\SertifikatController;
+
+
 // Define role pattern untuk KKN
 $kknRoles = 'superadmin|prodi|mitra|mahasiswa|kemahasiswaan|dosen';
 $kknAdminRoles = 'superadmin|prodi|mitra|kemahasiswaan|dosen';
@@ -102,6 +105,10 @@ Route::group([
     Route::get('/', ScreeningHafalanKKNIndex::class)->name('index');
     Route::get('/penilaian', ScreeningHafalanKKNPenilaian::class)->name('penilaian');
     Route::get('/detail/{mahasiswaId}', ScreeningHafalanKKNDetail::class)->name('penilaian.detail');
+    // ROUTE PREVIEW SERTIFIKAT (TANPA TOKEN)
+    Route::get('/sertifikat-preview/{mahasiswaId}', [SertifikatController::class, 'preview'])
+        ->name('sertifikat.preview');
+
 });
 
 /*

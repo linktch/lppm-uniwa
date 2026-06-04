@@ -9,6 +9,7 @@ use App\Services\KKNService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Layout('layouts.app')]
 class Penilaian extends Component
@@ -19,16 +20,12 @@ class Penilaian extends Component
     public $kegiatan_id;
     public $search = '';
     public $role;
-    public $mahasiswaId;
-    public $showModal = false;
-    public $selectedMahasiswa;
-    public $indikators = [];
-    public $penilaian = [];
-    public $totalNilai = 0;
-    public $maxNilai = 0;
-    public $progressPersen = 0;
-    public $sudahDinilai = 0;
-    public $totalIndikator = 0;
+    
+    // Properti untuk modal password
+    public $showPasswordModal = false;
+    public $password = '';
+    public $selectedMahasiswaId = null;
+    public $selectedMahasiswaName = '';
 
     protected $paginationTheme = 'tailwind';
 
@@ -61,7 +58,6 @@ class Penilaian extends Component
                     $q->where('data_mahasiswa', 'like', '%' . $this->search . '%');
                 });
             })
-  
             ->paginate(10);
 
         $mappedData = $kelompokUsers->getCollection()->map(function ($kelompokUser) {
@@ -101,6 +97,8 @@ class Penilaian extends Component
                 'prodi' => $dm['nama_program_studi'] ?? ($dm['prodi'] ?? '-'),
                 'jenis_kelamin' => $jenisKelamin,
                 'kelompok' => $kelompokUser->kelompok->nama_kelompok ?? '-',
+                'desa' => $kelompokUser->kelompok->desa ?? '-',
+                'kecamatan' => $kelompokUser->kelompok->kecamatan ?? '-',
                 'no_hp' => $dm['no_hp'] ?? ($user->no_hp ?? '-'),
                 'foto' => $dm['foto'] ?? null,
                 'progress' => $progressPersen,
@@ -115,143 +113,96 @@ class Penilaian extends Component
         return $kelompokUsers;
     }
 
-    public function openPenilaianModal($mahasiswaId)
+    // ========== METHOD UNTUK MODAL PASSWORD ==========
+    public function openPasswordModal($mahasiswaId, $mahasiswaName)
     {
-        $this->mahasiswaId = $mahasiswaId;
-        $this->loadMahasiswaData();
-        $this->loadIndikators();
-        $this->loadExistingPenilaian();
-        $this->showModal = true;
+        $this->selectedMahasiswaId = $mahasiswaId;
+        $this->selectedMahasiswaName = $mahasiswaName;
+        $this->showPasswordModal = true;
+        $this->password = '';
     }
 
-    public function closeModal()
+    public function closePasswordModal()
     {
-        $this->showModal = false;
-        $this->reset(['mahasiswaId', 'penilaian', 'totalNilai', 'sudahDinilai', 'progressPersen', 'indikators', 'selectedMahasiswa']);
+        $this->showPasswordModal = false;
+        $this->password = '';
+        $this->selectedMahasiswaId = null;
+        $this->selectedMahasiswaName = '';
     }
 
-    public function loadMahasiswaData()
-    {
-        $kelompokUser = KelompokUser::with(['user', 'kelompok'])
-            ->where('user_id', $this->mahasiswaId)
-            ->where('role', 'mahasiswa')
-            ->first();
+public function generateSertifikat()
+{
+    // Validasi password
+    $this->validate([
+        'password' => 'required|min:3'
+    ], [
+        'password.required' => 'Password wajib diisi',
+        'password.min' => 'Password minimal 3 karakter'
+    ]);
 
-        if ($kelompokUser) {
-            $user = $kelompokUser->user;
-            $dm = is_array($user->data_mahasiswa)
-                ? $user->data_mahasiswa
-                : json_decode($user->data_mahasiswa ?? '{}', true);
-
-            $this->selectedMahasiswa = (object) [
-                'id' => $user->id,
-                'nim' => $dm['nim'] ?? ($user->nim ?? '-'),
-                'nama' => $dm['nama_mahasiswa'] ?? ($user->name ?? '-'),
-                'prodi' => $dm['nama_program_studi'] ?? ($dm['prodi'] ?? '-'),
-                'jenis_kelamin' => $dm['jenis_kelamin'] ?? ($dm['gender'] ?? 'L'),
-                'kelompok' => $kelompokUser->kelompok->nama_kelompok ?? '-',
-            ];
-        }
+    // Ambil data mahasiswa untuk cek kelayakan
+    $kelompokUser = KelompokUser::with(['user', 'kelompok'])
+        ->where('user_id', $this->selectedMahasiswaId)
+        ->where('role', 'mahasiswa')
+        ->first();
+    
+    if (!$kelompokUser) {
+        $this->addError('password', 'Data mahasiswa tidak ditemukan');
+        return;
     }
 
-    public function loadIndikators()
-    {
-        $jenisKelamin = $this->selectedMahasiswa->jenis_kelamin ?? 'L';
+    $user = $kelompokUser->user;
+    $dm = is_array($user->data_mahasiswa) 
+        ? $user->data_mahasiswa 
+        : json_decode($user->data_mahasiswa ?? '{}', true);
 
-        // Ambil indikator berdasarkan jenis kelamin
-        $this->indikators = IndikatorHafalan::forGender($jenisKelamin)
-            ->ordered()
-            ->get();
+    $jenisKelamin = $dm['jenis_kelamin'] ?? ($dm['gender'] ?? 'L');
+    
+    $indikators = IndikatorHafalan::forGender($jenisKelamin)->ordered()->get();
+    $penilaianRecords = PenilaianHafalan::where('user_id', $this->selectedMahasiswaId)
+        ->where('periode_id', $this->periode_id)
+        ->where('kegiatan_id', $this->kegiatan_id)
+        ->get();
 
-        $this->totalIndikator = $this->indikators->count();
-        $this->maxNilai = $this->totalIndikator * 100;
+    $sudahDinilai = $penilaianRecords->count();
+    $totalIndikator = $indikators->count();
+
+    // Cek kelayakan
+    if ($sudahDinilai < $totalIndikator) {
+        $this->addError('password', "Masih ada " . ($totalIndikator - $sudahDinilai) . " indikator yang belum dinilai.");
+        return;
     }
 
-    public function loadExistingPenilaian()
+    // Tutup modal
+    $this->closePasswordModal();
+    
+    // Buat URL preview
+    $url = url("/{$this->role}/kegiatan/KKN/screening/hafalan/sertifikat-preview/{$kelompokUser->user_id}");
+    
+    // DD URL untuk debugging
+    // dd([
+    //     'url' => $url,
+    //     'role' => $this->role,
+    //     'mahasiswa_id' => $kelompokUser->user_id,
+    //     'full_url' => $url
+    // ]);
+    
+    // Dispatch event untuk buka tab baru
+    $this->dispatch('openPdfPreview', $url);
+}
+    private function getPredikat($persentase)
     {
-        $existingPenilaian = PenilaianHafalan::where('user_id', $this->mahasiswaId)
-            ->where('periode_id', $this->periode_id)
-            ->where('kegiatan_id', $this->kegiatan_id)
-            ->get()
-            ->keyBy('indikator_id');
-
-        $total = 0;
-        $this->sudahDinilai = 0;
-
-        foreach ($this->indikators as $indikator) {
-            if ($existingPenilaian->has($indikator->id)) {
-                $nilai = $existingPenilaian[$indikator->id]->nilai;
-                $this->penilaian[$indikator->id] = $nilai;
-                $total += ($nilai == 'sangat_lancar' ? 100 : 70);
-                $this->sudahDinilai++;
-            } else {
-                $this->penilaian[$indikator->id] = null;
-            }
-        }
-
-        $this->totalNilai = $total;
-        $this->calculateProgress();
+        if ($persentase >= 90) return 'Sangat Baik (A)';
+        if ($persentase >= 80) return 'Baik (B)';
+        if ($persentase >= 70) return 'Cukup (C)';
+        return 'Kurang (D)';
     }
 
-    public function calculateProgress()
+    private function getRomanMonth($month)
     {
-        if ($this->totalIndikator > 0) {
-            $this->progressPersen = round(($this->sudahDinilai / $this->totalIndikator) * 100);
-        } else {
-            $this->progressPersen = 0;
-        }
-    }
-
-    public function updatedPenilaian($value, $key)
-    {
-        $indikatorId = $key;
-
-        PenilaianHafalan::updateOrCreate(
-            [
-                'user_id' => $this->mahasiswaId,
-                'indikator_id' => $indikatorId,
-                'periode_id' => $this->periode_id,
-                'kegiatan_id' => $this->kegiatan_id,
-            ],
-            [
-                'nilai' => $value,
-                'penilai_id' => auth()->id(),
-                'tanggal_penilaian' => now(),
-            ]
-        );
-
-        // Recalculate
-        $this->loadExistingPenilaian();
-
-        $this->dispatch('progress-updated', [
-            'progress' => $this->progressPersen,
-            'sudahDinilai' => $this->sudahDinilai,
-            'totalIndikator' => $this->totalIndikator,
-            'totalNilai' => $this->totalNilai,
-            'maxNilai' => $this->maxNilai,
-        ]);
-    }
-
-    public function saveAllPenilaian()
-    {
-        if ($this->sudahDinilai < $this->totalIndikator) {
-            $this->dispatch('swal', [
-                'icon' => 'warning',
-                'title' => 'Perhatian!',
-                'text' => 'Masih ada ' . ($this->totalIndikator - $this->sudahDinilai) . ' indikator yang belum dinilai.'
-            ]);
-            return;
-        }
-
-        $this->dispatch('swal', [
-            'icon' => 'success',
-            'title' => 'Berhasil!',
-            'text' => 'Semua penilaian hafalan berhasil disimpan.',
-            'timer' => 2000,
-            'showConfirmButton' => false
-        ]);
-
-        $this->closeModal();
+        $romans = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 
+                   7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
+        return $romans[(int)$month];
     }
 
     public function updatingSearch()
