@@ -262,7 +262,7 @@
                         </label>
                         <div class="relative">
                             <i class="fas fa-list absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <select wire:model="jenis" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                            <select wire:model="jenisTimeline" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
                                 <option value="">Pilih Jenis Kegiatan</option>
                                 <option value="Pendaftaran">📝 Pendaftaran</option>
                                 <option value="Pembekalan">📚 Pembekalan</option>

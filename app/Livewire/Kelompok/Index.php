@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Kegiatan\Kkn\Kelompok;
+namespace App\Livewire\Kelompok;
 
 use App\Models\Kegiatan;
 use App\Models\Kelompok;
@@ -18,10 +18,14 @@ class Index extends Component
     // 🔥 Data dari Service
     public $kegiatanID;
     public $periodeFilter;
+    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
+    public $role; // TAMBAHKAN PROPERTY ROLE
+    
     // 🔥 Filter & Search
     public $search = '';
     public $selectedPeriode = '';
     public $selectedKegiatan = '';
+    
     // 🔥 Modal Properties
     public $showModal = false;
     public $isEditing = false;
@@ -42,14 +46,46 @@ class Index extends Component
         ]);
     }
 
-    public function mount()
+    public function mount($role, $jenisKegiatan = 'KKN') // TAMBAHKAN PARAMETER
     {
+        $this->role = $role; // SIMPAN ROLE
+        $this->jenisKegiatan = $jenisKegiatan; // SIMPAN JENIS KEGIATAN
+        
+        // Tentukan kegiatan ID berdasarkan jenis kegiatan
+        $this->kegiatanID = $this->getKegiatanId($jenisKegiatan);
+        $this->periodeFilter = $this->getPeriodeId($jenisKegiatan);
+        
         $aktif = Periode::where('status', 'AKTIF')->first();
-
         $this->selectedPeriode = $aktif?->id;
-
-        $this->kegiatanID = KKNService::kegiatanId('KKN');
         $this->selectedKegiatan = $this->kegiatanID;
+    }
+    
+    // TAMBAHKAN METHOD untuk mendapatkan kegiatan ID berdasarkan jenis
+    private function getKegiatanId($jenisKegiatan)
+    {
+        switch ($jenisKegiatan) {
+            case 'KKN':
+                return KKNService::kegiatanId('KKN');
+            case 'PKL':
+                return KKNService::kegiatanId('PKL');
+            case 'PMM':
+                return KKNService::kegiatanId('PMM');
+            default:
+                return KKNService::kegiatanId('KKN');
+        }
+    }
+    
+    // TAMBAHKAN METHOD untuk mendapatkan periode ID berdasarkan jenis
+    private function getPeriodeId($jenisKegiatan)
+    {
+        switch ($jenisKegiatan) {
+            case 'KKN':
+                return KKNService::periodeId();
+            case 'PKL':
+                return KKNService::periodeIdPkl();
+            default:
+                return KKNService::periodeId();
+        }
     }
 
     public function render()
@@ -75,10 +111,12 @@ class Index extends Component
             ->orderBy('id', 'asc')
             ->paginate(10);
 
-        return view('livewire.kegiatan.kkn.kelompok.index', [
+        return view('livewire.kelompok.index', [
             'periodes' => $periodes,
             'kegiatans' => $kegiatans,
             'kelompoks' => $kelompoks,
+            'role' => $this->role, // KIRIM KE VIEW
+            'jenisKegiatan' => $this->jenisKegiatan, // KIRIM KE VIEW
         ]);
     }
 
@@ -100,19 +138,19 @@ class Index extends Component
         $this->nama_kelompok = $kelompok->nama_kelompok;
         $this->periode_id = $kelompok->periode_id;
         $this->kegiatan_id = $kelompok->kegiatan_id;
+        $this->lokasi = $kelompok->lokasi; // TAMBAHKAN
         $this->isEditing = true;
         $this->showModal = true;
     }
 
     // 🔥 Simpan (create/update)
-
     public function save()
     {
         $this->validate([
             'nama_kelompok' => 'required|string|max:255',
             'periode_id' => 'required|exists:periode,id',
             'kegiatan_id' => 'required|exists:kegiatan,id',
-            'lokasi' => 'required|string|max:500',  // Added lokasi validation
+            'lokasi' => 'required|string|max:500',
         ]);
 
         try {
@@ -122,7 +160,7 @@ class Index extends Component
                     'nama_kelompok' => $this->nama_kelompok,
                     'periode_id' => $this->periode_id,
                     'kegiatan_id' => $this->kegiatan_id,
-                    'lokasi' => $this->lokasi,  // Added lokasi field
+                    'lokasi' => $this->lokasi,
                 ]);
 
                 $this->alert('success', 'Berhasil', 'Kelompok berhasil diupdate');
@@ -131,14 +169,14 @@ class Index extends Component
                     'nama_kelompok' => $this->nama_kelompok,
                     'periode_id' => $this->periode_id,
                     'kegiatan_id' => $this->kegiatan_id,
-                    'lokasi' => $this->lokasi,  // Added lokasi field
+                    'lokasi' => $this->lokasi,
                 ]);
 
                 $this->alert('success', 'Berhasil', 'Kelompok berhasil ditambahkan');
             }
 
             $this->closeModal();
-            $this->dispatch('kelompok-saved');  // Optional: dispatch event for refresh
+            $this->dispatch('kelompok-saved');
         } catch (\Exception $e) {
             $this->alert('error', 'Error', $e->getMessage());
         }
@@ -147,7 +185,6 @@ class Index extends Component
     // 🔥 Hapus kelompok
     public function deleteKelompok($id)
     {
-        dd($id);
         try {
             $kelompok = Kelompok::findOrFail($id);
 
@@ -171,6 +208,7 @@ class Index extends Component
         $this->nama_kelompok = '';
         $this->periode_id = '';
         $this->kegiatan_id = $this->kegiatanID;
+        $this->lokasi = '';
         $this->isEditing = false;
     }
 

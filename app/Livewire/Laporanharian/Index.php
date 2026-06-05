@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Kegiatan\Kkn\Laporanharian;
+namespace App\Livewire\Laporanharian;
 
 use App\Models\LaporanHarian;
 use App\Models\Periode;
@@ -24,6 +24,7 @@ class Index extends Component
     public $filterProdi = '';
     public $perPage = 10;
     public $role;
+    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
     public $canCreateLaporan = false;
     public $sisaHari = 0;
     public $timelineMessage = '';
@@ -31,9 +32,10 @@ class Index extends Component
     public $timelinePelaksanaan;
     public $deleteId = null;
 
-    public function mount()
+    public function mount($role, $jenisKegiatan = 'KKN') // TAMBAHKAN PARAMETER
     {
-        $this->role = Auth::user()->role;
+        $this->role = $role;
+        $this->jenisKegiatan = $jenisKegiatan;
         $this->checkPeriodeAktif();
     }
 
@@ -96,8 +98,9 @@ class Index extends Component
             return;
         }
 
-        return redirect()->route('kegiatan.kkn.laporanharian.create', [
-            'role' => $this->role
+        return redirect()->route('kegiatan.laporanharian.create', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan
         ]);
     }
 
@@ -106,8 +109,9 @@ class Index extends Component
      */
     public function view($id)
     {
-        return redirect()->route('kegiatan.kkn.laporanharian.view', [
+        return redirect()->route('kegiatan.laporanharian.view', [
             'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
             'id' => $id
         ]);
     }
@@ -146,8 +150,9 @@ class Index extends Component
             return;
         }
 
-        return redirect()->route('kegiatan.kkn.laporanharian.update', [
+        return redirect()->route('kegiatan.laporanharian.update', [
             'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
             'id' => $id
         ]);
     }
@@ -256,10 +261,12 @@ class Index extends Component
         $periodes = Periode::all();
         $prodis = ProdiFakultas::all();
 
-        return view('livewire.kegiatan.kkn.laporanharian.index', [
+        return view('livewire.laporanharian.index', [
             'laporans' => $laporans,
             'periodes' => $periodes,
             'prodis' => $prodis,
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
         ]);
     }
 }

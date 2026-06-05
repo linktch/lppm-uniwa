@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Kegiatan\Kkn\Laporanharian;
+namespace App\Livewire\Laporanharian;
 
 use App\Models\KelompokUser;
 use App\Models\LaporanHarian;
@@ -20,6 +20,8 @@ class Create extends Component
     // 🔥 SIMPAN YANG PENTING SAJA (ID)
     public $kelompokId;
     public $kell;
+    public $role; // TAMBAHKAN PROPERTY ROLE
+    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
     // form
     public $tanggal;
     public $jam;
@@ -36,15 +38,18 @@ class Create extends Component
     public $timelineMessage = '';
     public $sisaHari = 0;
 
-    public function mount($id = null)
+    public function mount($role, $jenisKegiatan, $id = null) // TAMBAHKAN PARAMETER
     {
+        $this->role = $role;
+        $this->jenisKegiatan = $jenisKegiatan;
+        
         // default tanggal & jam
         $this->tanggal = now()->toDateString();
         $this->jam = now()->format('H:i');
 
-        // ✅ Ambil dari service KKN
-        $this->periodeAktif = KKNService::periode();
-        $this->kegiatan = KKNService::kegiatan('KKN');
+        // ✅ Ambil dari service KKN berdasarkan jenis kegiatan
+        $this->periodeAktif = $this->getPeriodeAktif($jenisKegiatan);
+        $this->kegiatan = $this->getKegiatan($jenisKegiatan);
 
         if (!$this->periodeAktif || !$this->kegiatan) {
             abort(404, 'Periode atau kegiatan KKN tidak ditemukan');
@@ -56,8 +61,9 @@ class Create extends Component
         // ✅ Validasi timeline sebelum melanjutkan
         if (!$this->canCreateLaporan && !$id) {
             session()->flash('error', $this->timelineMessage);
-            return redirect()->route('kegiatan.kkn.laporanharian.index', [
-                'role' => auth()->user()->role,
+            return redirect()->route('kegiatan.laporanharian.index', [
+                'role' => $role,
+                'jenisKegiatan' => $jenisKegiatan
             ]);
         }
 
@@ -88,8 +94,9 @@ class Create extends Component
             // ✅ Validasi timeline untuk edit
             if (!$this->canCreateLaporan) {
                 session()->flash('error', 'Tidak dapat mengedit laporan karena periode pelaksanaan sudah berakhir.');
-                return redirect()->route('kegiatan.kkn.laporanharian.index', [
-                    'role' => auth()->user()->role,
+                return redirect()->route('kegiatan.laporanharian.index', [
+                    'role' => $role,
+                    'jenisKegiatan' => $jenisKegiatan
                 ]);
             }
 
@@ -102,6 +109,20 @@ class Create extends Component
             $this->catatan = $laporan->catatan;
             $this->foto = $laporan->foto;
         }
+    }
+    
+    // TAMBAHKAN METHOD untuk mendapatkan periode aktif berdasarkan jenis kegiatan
+    private function getPeriodeAktif($jenisKegiatan)
+    {
+        // Sesuaikan dengan service atau model Anda
+        return KKNService::periode();
+    }
+    
+    // TAMBAHKAN METHOD untuk mendapatkan kegiatan berdasarkan jenis kegiatan
+    private function getKegiatan($jenisKegiatan)
+    {
+        // Sesuaikan dengan service atau model Anda
+        return KKNService::kegiatan($jenisKegiatan);
     }
 
     // =========================
@@ -153,8 +174,9 @@ class Create extends Component
 
     public function back()
     {
-        return redirect()->route('kegiatan.kkn.laporanharian.index', [
-            'role' => auth()->user()->role,
+        return redirect()->route('kegiatan.laporanharian.index', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan
         ]);
     }
 
@@ -248,29 +270,31 @@ class Create extends Component
                 'icon' => 'success',
                 'title' => 'Berhasil!',
                 'text' => 'Laporan harian berhasil disimpan',
-                'url' => route('kegiatan.kkn.laporanharian.index', [
-                    'role' => auth()->user()->role,
+                'url' => route('kegiatan.laporanharian.index', [
+                    'role' => $this->role,
+                    'jenisKegiatan' => $this->jenisKegiatan
                 ])
             ]);
 
             return;
         }
 
-        // Reset form setelah sukses
-
         // Kembali ke halaman index
-        return redirect()->route('kegiatan.kkn.laporanharian.index', [
-            'role' => auth()->user()->role,
+        return redirect()->route('kegiatan.laporanharian.index', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan
         ]);
     }
 
     public function render()
     {
-        return view('livewire.kegiatan.kkn.laporanharian.create', [
+        return view('livewire.laporanharian.create', [
             'timelinePelaksanaan' => $this->timelinePelaksanaan,
             'canCreateLaporan' => $this->canCreateLaporan,
             'timelineMessage' => $this->timelineMessage,
             'sisaHari' => $this->sisaHari,
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
         ]);
     }
 }

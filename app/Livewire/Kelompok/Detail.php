@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Kegiatan\Kkn\Kelompok;
+namespace App\Livewire\Kelompok;
 
 use App\Models\Dosen;
 use App\Models\Kegiatan;
@@ -26,6 +26,8 @@ class Detail extends Component
     public $periodeFilter;
     public $selectedKegiatan;
     public $selectedPeriode;
+    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
+    public $role; // TAMBAHKAN PROPERTY ROLE
     
     // Data relationships
     public $dosenPembimbing;
@@ -38,20 +40,20 @@ class Detail extends Component
     public $isEditingTim = false;
     public $timId = null;
     public $selected_user_id = '';
-    public $role = '';
     public $keterangan = '';
     public $availableUsers = [];
 
-    public function mount($kelompokID)
+    public function mount($role, $jenisKegiatan, $kelompokID) // TAMBAHKAN PARAMETER role DAN jenisKegiatan
     {
+        $this->role = $role; // SIMPAN ROLE
+        $this->jenisKegiatan = $jenisKegiatan; // SIMPAN JENIS KEGIATAN
         $this->kelompokID = $kelompokID;
 
-        // ✅ pakai service
-        $this->kegiatanID = KKNService::kegiatanId('KKN');
-        $this->periodeFilter = KKNService::periodeId();
+        // Tentukan kegiatan ID berdasarkan jenis kegiatan
+        $this->kegiatanID = $this->getKegiatanId($jenisKegiatan);
+        $this->periodeFilter = $this->getPeriodeId($jenisKegiatan);
 
         // Set default values
-        $this->kegiatan_id = $this->kegiatanID;
         $this->selectedKegiatan = $this->kegiatanID;
         $this->selectedPeriode = $this->periodeFilter;
 
@@ -61,13 +63,44 @@ class Detail extends Component
             'kegiatan',
         ])->findOrFail($kelompokID);
     }
+    
+    // TAMBAHKAN METHOD untuk mendapatkan kegiatan ID berdasarkan jenis
+    private function getKegiatanId($jenisKegiatan)
+    {
+        switch ($jenisKegiatan) {
+            case 'KKN':
+                return KKNService::kegiatanId('KKN');
+            case 'PKL':
+                return KKNService::kegiatanId('PKL');
+            case 'PMM':
+                return KKNService::kegiatanId('PMM');
+            default:
+                return KKNService::kegiatanId('KKN');
+        }
+    }
+    
+    // TAMBAHKAN METHOD untuk mendapatkan periode ID berdasarkan jenis
+    private function getPeriodeId($jenisKegiatan)
+    {
+        switch ($jenisKegiatan) {
+            case 'KKN':
+                return KKNService::periodeId();
+            case 'PKL':
+                return KKNService::periodeIdPkl();
+            default:
+                return KKNService::periodeId();
+        }
+    }
 
     /**
      * Back to list page
      */
     public function backToList()
     {
-        return redirect()->route('kegiatan.kkn.kelompok.index');
+        return redirect()->route('kegiatan.kelompok.index', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan
+        ]);
     }
 
     /**
@@ -75,7 +108,11 @@ class Detail extends Component
      */
     public function editKelompok()
     {
-        return redirect()->route('kegiatan.kkn.kelompok.edit', $this->kelompokID);
+        return redirect()->route('kegiatan.kelompok.edit', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
+            'kelompokID' => $this->kelompokID
+        ]);
     }
 
     /**
@@ -90,7 +127,7 @@ class Detail extends Component
             ->whereDoesntHave('kelompokUser', function($query) {
                 $query->where('kelompok_id', $this->kelompokID);
             })
-            ->orderBy('first_name')
+            ->orderBy('name')
             ->get();
         
         $this->showTimModal = true;
@@ -139,7 +176,7 @@ class Detail extends Component
     {
         $this->validate([
             'selected_user_id' => 'required|exists:users,id',
-            'role' => 'required|string|in:dospem,tim,korlap,',
+            'role' => 'required|string|in:dospem,tim,korlap',
             'keterangan' => 'nullable|string|max:500',
         ]);
 
@@ -343,12 +380,14 @@ class Detail extends Component
             ->where('role', '!=', 'mahasiswa')
             ->get();
         
-        return view('livewire.kegiatan.kkn.kelompok.detail', [
+        return view('livewire.kelompok.detail', [
             'kelompok' => $this->kelompok,
             'anggota' => $anggota,
             'tim' => $tim,
             'prodiCount' => $this->prodiCount,
             'rataSemester' => $this->rataSemester,
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
         ]);
     }
 }

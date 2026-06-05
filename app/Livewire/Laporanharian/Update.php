@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Kegiatan\Kkn\Laporanharian;
+namespace App\Livewire\Laporanharian;
 
 use App\Models\LaporanHarian;
 use App\Models\Review;
@@ -19,6 +19,7 @@ class Update extends Component
     public $laporanId;
     public $laporan;
     public $role;
+    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
     public $tanggal;
     public $jam;
     public $aktivitas;
@@ -27,9 +28,10 @@ class Update extends Component
     public $status;
     public $reviews = [];
 
-    public function mount($role, $id)
+    public function mount($role, $jenisKegiatan, $id) // TAMBAHKAN PARAMETER jenisKegiatan
     {
         $this->role = $role;
+        $this->jenisKegiatan = $jenisKegiatan;
         $this->laporanId = $id;
         $this->laporan = LaporanHarian::with(['user', 'kelompok'])
             ->findOrFail($id);
@@ -92,8 +94,9 @@ class Update extends Component
             ]);
 
             session()->flash('success', 'Laporan berhasil direvisi dan disubmit kembali');
-            return redirect()->route('kegiatan.kkn.laporanharian.view', [
+            return redirect()->route('kegiatan.laporanharian.view', [
                 'role' => $this->role,
+                'jenisKegiatan' => $this->jenisKegiatan,
                 'id' => $this->laporanId
             ]);
         } catch (\Exception $e) {
@@ -113,14 +116,18 @@ class Update extends Component
 
     public function back()
     {
-        return redirect()->route('kegiatan.kkn.laporanharian.view', [
+        return redirect()->route('kegiatan.laporanharian.view', [
             'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
             'id' => $this->laporanId
         ]);
     }
 
     public function render()
     {
-        return view('livewire.kegiatan.kkn.laporanharian.update');
+        return view('livewire.laporanharian.update', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
+        ]);
     }
 }

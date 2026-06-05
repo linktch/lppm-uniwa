@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Kegiatan\Kkn\Kelompok;
+namespace App\Livewire\Kelompok;
 
 use App\Models\Kelompok;
 use App\Models\KelompokUser;
@@ -20,6 +20,9 @@ class Add extends Component
     // 🔥 Data utama
     public $kelompok;
     public $kelompokID;
+    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
+    public $role; // TAMBAHKAN PROPERTY ROLE
+    
     // 🔥 UI state
     public $selectedMahasiswa = [];
     public $selectAll = false;
@@ -31,8 +34,10 @@ class Add extends Component
      * | MOUNT
      * |--------------------------------------------------------------------------
      */
-    public function mount($kelompokID)
+    public function mount($role, $jenisKegiatan, $kelompokID) // TAMBAHKAN PARAMETER role DAN jenisKegiatan
     {
+        $this->role = $role; // SIMPAN ROLE
+        $this->jenisKegiatan = $jenisKegiatan; // SIMPAN JENIS KEGIATAN
         $this->kelompokID = $kelompokID;
 
         $this->kelompok = Kelompok::findOrFail($kelompokID);
@@ -91,9 +96,11 @@ class Add extends Component
 
         $this->dispatch('swal', icon: 'success', title: 'Berhasil', text: 'Mahasiswa berhasil ditambahkan');
 
-        return redirect()->route('kegiatan.kkn.kelompok.detail', [
-            auth()->user()->role,
-            $this->kelompokID
+        // PERBAIKI redirect dengan parameter lengkap
+        return redirect()->route('kegiatan.kelompok.detail', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
+            'kelompokID' => $this->kelompokID
         ]);
     }
 
@@ -104,9 +111,11 @@ class Add extends Component
      */
     public function backToDetail()
     {
-        return redirect()->route('kegiatan.kkn.kelompok.detail', [
-            auth()->user()->role,
-            $this->kelompokID
+        // PERBAIKI redirect dengan parameter lengkap
+        return redirect()->route('kegiatan.kelompok.detail', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
+            'kelompokID' => $this->kelompokID
         ]);
     }
 
@@ -129,7 +138,7 @@ class Add extends Component
             });
 
         // 🔥 2. AMBIL DATA JADI COLLECTION
-        $collection = $query->get();  // ⬅️ INI YANG KAMU LUPA
+        $collection = $query->get();
 
         // 🔥 3. FILTER ANGKATAN
         if ($this->filterAngkatan) {
@@ -172,8 +181,10 @@ class Add extends Component
             ]
         );
 
-        return view('livewire.kegiatan.kkn.kelompok.add', [
-            'mahasiswas' => $mahasiswas
+        return view('livewire.kelompok.add', [
+            'mahasiswas' => $mahasiswas,
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
         ]);
     }
 }

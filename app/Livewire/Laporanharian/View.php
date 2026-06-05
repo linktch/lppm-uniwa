@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Kegiatan\Kkn\Laporanharian;
+namespace App\Livewire\Laporanharian;
 
 use App\Models\LaporanHarian;
 use App\Models\Review;
@@ -16,6 +16,8 @@ class View extends Component
     public $data = [];
     public $reviews = [];
     public $laporanId;
+    public $role; // TAMBAHKAN PROPERTY ROLE
+    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
     public $showReviewForm = false;
     public $reviewStatus = '';
     public $reviewKomentar = '';
@@ -23,8 +25,10 @@ class View extends Component
     public $replyText = '';
     public $replyReviewId = null;
 
-    public function mount($id)
+    public function mount($role, $jenisKegiatan, $id) // TAMBAHKAN PARAMETER
     {
+        $this->role = $role;
+        $this->jenisKegiatan = $jenisKegiatan;
         $this->laporanId = $id;
 
         $laporanHarian = LaporanHarian::with(['user', 'kelompok', 'periode', 'kegiatan'])
@@ -185,11 +189,17 @@ class View extends Component
 
     public function back()
     {
-        return redirect()->route('kegiatan.kkn.laporanharian.index', ['role' => Auth::user()->role]);
+        return redirect()->route('kegiatan.laporanharian.index', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan
+        ]);
     }
 
     public function render()
     {
-        return view('livewire.kegiatan.kkn.laporanharian.view');
+        return view('livewire.laporanharian.view', [
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
+        ]);
     }
 }
