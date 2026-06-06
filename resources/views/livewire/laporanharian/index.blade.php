@@ -1,207 +1,170 @@
-<div>
-    <div class="p-6">
-        <div class="max-w-7xl mx-auto">
-            <!-- Header -->
-            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-                <div class="p-5">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-700 to-blue-500 flex items-center justify-center">
-                            <i class="fas fa-file-alt text-white text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-xl font-bold text-gray-800">Laporan Harian KKN</h4>
-                            <p class="text-sm text-gray-500">Laporan kegiatan harian mahasiswa KKN</p>
-                        </div>
-                    </div>
+<div class="min-h-screen bg-gray-300 pb-20">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white sticky top-0 z-10 shadow-lg">
+        <div class="px-4 py-5">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i class="fas fa-file-alt text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">Laporan Harian KKN</h1>
+                    <p class="text-xs text-white/80 mt-0.5">Laporan kegiatan harian mahasiswa KKN</p>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Timeline Info Card -->
-            <div
-                class="rounded-xl p-5 mb-6 flex items-start gap-4 shadow-sm {{ $canCreateLaporan ? 'bg-green-50 border-l-4 border-green-500' : 'bg-yellow-50 border-l-4 border-yellow-500' }}">
-                <i class="fas fa-calendar-alt text-2xl text-blue-500"></i>
-                <div class="flex-1">
-                    <p class="font-semibold text-gray-800">Informasi Timeline Pelaksanaan</p>
-                    <p class="text-sm text-gray-600">{{ $timelineMessage }}</p>
-                    @if($canCreateLaporan && $sisaHari > 0)
-                    <div class="mt-3">
-                        <div class="w-full bg-gray-200 rounded-full h-1.5">
-                            <div class="bg-green-500 h-1.5 rounded-full" style="width: 100%"></div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            <i class="fas fa-hourglass-half mr-1"></i> Sisa waktu: {{ $sisaHari }} hari
-                        </p>
+    <!-- Timeline Info Card -->
+    <div class="mx-4 mt-4">
+        <div class="rounded-xl p-4 flex items-start gap-3 shadow-sm {{ $canCreateLaporan ? 'bg-green-50 border-l-4 border-green-500' : 'bg-yellow-50 border-l-4 border-yellow-500' }}">
+            <i class="fas fa-calendar-alt text-xl text-blue-500 mt-0.5"></i>
+            <div class="flex-1">
+                <p class="font-semibold text-gray-800 text-sm">Informasi Timeline Pelaksanaan</p>
+                <p class="text-xs text-gray-600 mt-0.5">{{ $timelineMessage }}</p>
+                @if($canCreateLaporan && $sisaHari > 0)
+                <div class="mt-2">
+                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                        <div class="bg-green-500 h-1.5 rounded-full" style="width: 100%"></div>
                     </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Filter -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="p-5">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Periode</label>
-                            <select wire:model.live="periodeFilter" class="w-full px-3 py-2 border rounded-lg text-sm">
-                                <option value="">Semua Periode</option>
-                                @foreach($periodes as $p)
-                                <option value="{{ $p->id }}">{{ $p->nama_periode }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- HANYA TAMPIL UNTUK ROLE SUPERADMIN, DOSEN, DAN KEMAHASISWAAN -->
-                        @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'kemahasiswaan']))
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Program Studi</label>
-                            <select wire:model.live="filterProdi" class="w-full px-3 py-2 border rounded-lg text-sm">
-                                <option value="">Semua Prodi</option>
-                                @foreach($prodis as $prodi)
-                                <option value="{{ $prodi->id }}">{{ $prodi->nama_program_studi }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Cari Mahasiswa</label>
-                            <input type="text" wire:model.live.debounce.300ms="search"
-                                class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Nama atau NIM...">
-                        </div>
-                        @endif
-
-                        <div class="flex items-end">
-                            @if($canCreateLaporan)
-                            <a href="{{ route('kegiatan.laporanharian.create', [
-        'role' => $role,
-        'jenisKegiatan' => $jenisKegiatan
-    ]) }}" wire:navigate class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition text-center inline-block">
-                                <i class="fas fa-plus mr-2"></i>Tambah Laporan
-                            </a>
-                            @else
-                            <div class="relative w-full group">
-                                <button disabled
-                                    class="w-full bg-blue-600 opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
-                                    <i class="fas fa-plus mr-2"></i>Tambah Laporan
-                                </button>
-                                <div
-                                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
-                                    {{ $timelineMessage }}
-                                </div>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tabel -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">No</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500">Tanggal</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">NIM</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Nama Mahasiswa</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Kelompok</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500">Status</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse($laporans as $index => $laporan)
-                            @php
-                            $dataMahasiswa = is_string($laporan->user?->data_mahasiswa)
-                            ? json_decode($laporan->user->data_mahasiswa, true)
-                            : ($laporan->user?->data_mahasiswa ?? []);
-                            @endphp
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 text-sm text-gray-500">{{ $laporans->firstItem() + $index }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 text-center">
-                                    {{ \Carbon\Carbon::parse($laporan->tanggal)->format('d/m/Y H:i') }}
-                                </td>
-                                <td class="px-4 py-3 font-mono text-sm">{{ $dataMahasiswa['nim'] ?? '-' }}</td>
-                                <td class="px-4 py-3">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
-                                            <i class="fas fa-user-graduate text-xs text-blue-600"></i>
-                                        </div>
-                                        <span
-                                            class="text-sm">{{ $dataMahasiswa['nama_mahasiswa'] ?? $laporan->user->name ?? '-' }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <span
-                                        class="inline-flex px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
-                                        {{ $laporan->kelompok->nama_kelompok ?? '-' }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    @php
-                                    $statusConfig = [
-                                    'draft' => ['class' => 'bg-gray-100 text-gray-700', 'icon' => 'fa-pen-fancy',
-                                    'label' => 'Draft'],
-                                    'submitted' => ['class' => 'bg-blue-100 text-blue-700', 'icon' => 'fa-paper-plane',
-                                    'label' => 'Submitted'],
-                                    'revisi' => ['class' => 'bg-yellow-100 text-yellow-700', 'icon' => 'fa-undo-alt',
-                                    'label' => 'Revisi'],
-                                    'approved' => ['class' => 'bg-green-100 text-green-700', 'icon' =>
-                                    'fa-check-circle', 'label' => 'Approved'],
-                                    ];
-                                    $config = $statusConfig[$laporan->status] ?? $statusConfig['draft'];
-                                    @endphp
-                                    <span
-                                        class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full {{ $config['class'] }}">
-                                        <i class="fas {{ $config['icon'] }}"></i> {{ $config['label'] }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <div class="flex gap-2 justify-center">
-                                        <!-- View -->
-                                        <button wire:click="view({{ $laporan->id }})"
-                                            class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 inline-flex items-center justify-center transition"
-                                            title="Lihat Detail">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-
-                                        <!-- Edit (hanya untuk mahasiswa dengan status revisi) -->
-                                        @if(auth()->user()->role == 'mahasiswa' && $laporan->status == 'revisi' &&
-                                        $laporan->user_id == auth()->id())
-                                        <button wire:click="edit({{ $laporan->id }})"
-                                            class="w-8 h-8 rounded-lg bg-yellow-50 hover:bg-yellow-100 text-yellow-600 inline-flex items-center justify-center transition"
-                                            title="Edit Laporan">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        @endif
-
-                                        <!-- Delete (hanya untuk pemilik laporan) -->
-                                        @if($laporan->user_id == auth()->id())
-                                        <button wire:click="confirmDelete({{ $laporan->id }})"
-                                            class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 inline-flex items-center justify-center transition"
-                                            title="Hapus Laporan">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-                                    Belum ada data laporan harian
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @if($laporans->hasPages())
-                <div class="px-5 py-3 bg-gray-50 border-t">
-                    {{ $laporans->links() }}
+                    <p class="text-xs text-gray-500 mt-1.5">
+                        <i class="fas fa-hourglass-half mr-1"></i> Sisa waktu: {{ $sisaHari }} hari
+                    </p>
                 </div>
                 @endif
             </div>
         </div>
     </div>
+
+    <!-- Filter Section -->
+    <div class="bg-white rounded-xl shadow-sm mx-4 mt-4 overflow-hidden">
+        <div class="p-4 space-y-3">
+            <!-- Row 1: Periode & Tombol Tambah -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Periode</label>
+                    <select wire:model.live="periodeFilter" class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                        <option value="">Semua Periode</option>
+                        @foreach($periodes as $p)
+                        <option value="{{ $p->id }}">{{ $p->nama_periode }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="sm:w-40 flex items-end">
+                    @if($canCreateLaporan)
+                    <a href="{{ route('kegiatan.laporanharian.create', ['role' => $role, 'jenisKegiatan' => $jenisKegiatan]) }}" 
+                       wire:navigate 
+                       class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition text-center">
+                        <i class="fas fa-plus mr-2"></i>Tambah
+                    </a>
+                    @else
+                    <div class="relative w-full group">
+                        <button disabled class="w-full bg-blue-600 opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
+                            <i class="fas fa-plus mr-2"></i>Tambah
+                        </button>
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
+                            {{ $timelineMessage }}
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Row 2: Filter Prodi & Search (hanya untuk role tertentu) -->
+            @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'kemahasiswaan']))
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Program Studi</label>
+                    <select wire:model.live="filterProdi" class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                        <option value="">Semua Prodi</option>
+                        @foreach($prodis as $prodi)
+                        <option value="{{ $prodi->id }}">{{ $prodi->nama_program_studi }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Cari</label>
+                    <input type="text" wire:model.live.debounce.300ms="search"
+                           class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Nama atau NIM...">
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- List Laporan (Card-based untuk mobile) -->
+    <div class="px-4 mt-4 space-y-3">
+        @forelse($laporans as $index => $laporan)
+        @php
+        $dataMahasiswa = is_string($laporan->user?->data_mahasiswa)
+            ? json_decode($laporan->user->data_mahasiswa, true)
+            : ($laporan->user?->data_mahasiswa ?? []);
+            
+        $statusConfig = [
+            'draft' => ['class' => 'bg-gray-100 text-gray-700', 'icon' => 'fa-pen-fancy', 'label' => 'Draft'],
+            'submitted' => ['class' => 'bg-blue-100 text-blue-700', 'icon' => 'fa-paper-plane', 'label' => 'Submitted'],
+            'revisi' => ['class' => 'bg-yellow-100 text-yellow-700', 'icon' => 'fa-undo-alt', 'label' => 'Revisi'],
+            'approved' => ['class' => 'bg-green-100 text-green-700', 'icon' => 'fa-check-circle', 'label' => 'Approved'],
+        ];
+        $config = $statusConfig[$laporan->status] ?? $statusConfig['draft'];
+        @endphp
+        
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <!-- Header Card -->
+            <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-user-graduate text-xs text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800">{{ $dataMahasiswa['nama_mahasiswa'] ?? $laporan->user->name ?? '-' }}</p>
+                        <p class="text-xs text-gray-400">{{ $dataMahasiswa['nim'] ?? '-' }}</p>
+                    </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full {{ $config['class'] }}">
+                    <i class="fas {{ $config['icon'] }}"></i> {{ $config['label'] }}
+                </span>
+            </div>
+            
+            <!-- Body Card -->
+            <div class="px-4 py-3 space-y-2">
+                <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-calendar-alt text-gray-400 w-4"></i>
+                    <span class="text-gray-600">{{ \Carbon\Carbon::parse($laporan->tanggal)->format('d/m/Y H:i') }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-users text-gray-400 w-4"></i>
+                    <span class="text-gray-600">Kelompok: {{ $laporan->kelompok->nama_kelompok ?? '-' }}</span>
+                </div>
+            </div>
+            
+            <!-- Footer Card (Aksi) -->
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex gap-3">
+                <button wire:click="view({{ $laporan->id }})"
+                        class="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm transition">
+                    <i class="fas fa-eye"></i> Detail
+                </button>
+                
+                @if(auth()->user()->role == 'mahasiswa' && $laporan->status == 'revisi' && $laporan->user_id == auth()->id())
+                <button wire:click="edit({{ $laporan->id }})"
+                        class="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 rounded-lg text-sm transition">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                @endif
+                
+            </div>
+        </div>
+        @empty
+        <div class="bg-white rounded-xl shadow-sm p-8 text-center">
+            <i class="fas fa-inbox text-gray-300 text-5xl mb-3 block"></i>
+            <p class="text-gray-500">Belum ada data laporan harian</p>
+        </div>
+        @endforelse
+    </div>
+
+    <!-- Pagination -->
+    @if($laporans->hasPages())
+    <div class="px-4 mt-4">
+        {{ $laporans->links() }}
+    </div>
+    @endif
 </div>

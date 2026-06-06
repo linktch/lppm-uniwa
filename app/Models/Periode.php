@@ -10,6 +10,7 @@ class Periode extends Model
 
     protected $fillable = [
         'nama_periode',
+        'status',
         'tanggal_mulai',
         'tanggal_selesai'
     ];

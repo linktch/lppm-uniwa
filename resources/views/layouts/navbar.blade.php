@@ -63,9 +63,11 @@
                         <p class="text-sm font-semibold">{{ auth()->user()->name ?? 'User' }}</p>
                         <p class="text-xs text-gray-500">{{ auth()->user()->role ?? 'Admin' }}</p>
                     </div>
-                    <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        <i class="fas fa-user w-4"></i> Profile
-                    </a>
+                   <a href="{{ route('profile') }}" 
+   wire:navigate
+   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+    <i class="fas fa-user w-4"></i> Profile
+</a>
                     <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         <i class="fas fa-cog w-4"></i> Settings
                     </a>

@@ -2,15 +2,14 @@
 
 namespace App\Livewire\Kelompok;
 
-use App\Models\Dosen;
 use App\Models\Kegiatan;
 use App\Models\Kelompok;
 use App\Models\KelompokUser;
 use App\Models\LokasiKkn;
 use App\Models\Periode;
 use App\Models\Prodi;
-use App\Models\User;  // Mahasiswa
-use App\Services\KKNService;
+use App\Models\User;
+use App\Services\KegiatanService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -26,8 +25,8 @@ class Detail extends Component
     public $periodeFilter;
     public $selectedKegiatan;
     public $selectedPeriode;
-    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
-    public $role; // TAMBAHKAN PROPERTY ROLE
+    public $jenisKegiatan;
+    public $role;
     
     // Data relationships
     public $dosenPembimbing;
@@ -35,23 +34,24 @@ class Detail extends Component
     public $prodi;
     public $mahasiswas;
     
-    // Modal properties
+    // Modal properties for Tim
     public $showTimModal = false;
     public $isEditingTim = false;
     public $timId = null;
     public $selected_user_id = '';
+    public $role_tim = '';
     public $keterangan = '';
     public $availableUsers = [];
 
-    public function mount($role, $jenisKegiatan, $kelompokID) // TAMBAHKAN PARAMETER role DAN jenisKegiatan
+    public function mount($role, $jenisKegiatan, $kelompokID)
     {
-        $this->role = $role; // SIMPAN ROLE
-        $this->jenisKegiatan = $jenisKegiatan; // SIMPAN JENIS KEGIATAN
+        $this->role = $role;
+        $this->jenisKegiatan = $jenisKegiatan;
         $this->kelompokID = $kelompokID;
 
-        // Tentukan kegiatan ID berdasarkan jenis kegiatan
-        $this->kegiatanID = $this->getKegiatanId($jenisKegiatan);
-        $this->periodeFilter = $this->getPeriodeId($jenisKegiatan);
+        // Gunakan KegiatanService untuk mendapatkan ID
+        $this->kegiatanID = KegiatanService::getKegiatanId($jenisKegiatan);
+        $this->periodeFilter = KegiatanService::getPeriodeId($jenisKegiatan);
 
         // Set default values
         $this->selectedKegiatan = $this->kegiatanID;
@@ -62,34 +62,6 @@ class Detail extends Component
             'periode',
             'kegiatan',
         ])->findOrFail($kelompokID);
-    }
-    
-    // TAMBAHKAN METHOD untuk mendapatkan kegiatan ID berdasarkan jenis
-    private function getKegiatanId($jenisKegiatan)
-    {
-        switch ($jenisKegiatan) {
-            case 'KKN':
-                return KKNService::kegiatanId('KKN');
-            case 'PKL':
-                return KKNService::kegiatanId('PKL');
-            case 'PMM':
-                return KKNService::kegiatanId('PMM');
-            default:
-                return KKNService::kegiatanId('KKN');
-        }
-    }
-    
-    // TAMBAHKAN METHOD untuk mendapatkan periode ID berdasarkan jenis
-    private function getPeriodeId($jenisKegiatan)
-    {
-        switch ($jenisKegiatan) {
-            case 'KKN':
-                return KKNService::periodeId();
-            case 'PKL':
-                return KKNService::periodeIdPkl();
-            default:
-                return KKNService::periodeId();
-        }
     }
 
     /**
@@ -120,15 +92,16 @@ class Detail extends Component
      */
     public function openTimModal()
     {
-        $this->reset(['selected_user_id', 'role', 'keterangan', 'timId', 'isEditingTim']);
+        $this->reset(['selected_user_id', 'role_tim', 'keterangan', 'timId', 'isEditingTim']);
         
         // Get available users (non-mahasiswa and not already in this kelompok)
         $this->availableUsers = User::where('role', '!=', 'mahasiswa')
-            ->whereDoesntHave('kelompokUser', function($query) {
-                $query->where('kelompok_id', $this->kelompokID);
-            })
-            ->orderBy('name')
-            ->get();
+        ->whereDoesntHave('kelompokUser', function($query) {
+            $query->where('kelompok_id', $this->kelompokID);
+        })
+        ->orderBy('first_name')
+        ->get();
+        
         
         $this->showTimModal = true;
     }
@@ -142,7 +115,7 @@ class Detail extends Component
         
         $this->timId = $timMember->id;
         $this->selected_user_id = $timMember->user_id;
-        $this->role = $timMember->role;
+        $this->role_tim = $timMember->role;
         $this->keterangan = $timMember->keterangan ?? '';
         $this->isEditingTim = true;
         
@@ -166,7 +139,7 @@ class Detail extends Component
     public function closeTimModal()
     {
         $this->showTimModal = false;
-        $this->reset(['selected_user_id', 'role', 'keterangan', 'timId', 'isEditingTim']);
+        $this->reset(['selected_user_id', 'role_tim', 'keterangan', 'timId', 'isEditingTim']);
     }
 
     /**
@@ -176,7 +149,7 @@ class Detail extends Component
     {
         $this->validate([
             'selected_user_id' => 'required|exists:users,id',
-            'role' => 'required|string|in:dospem,tim,korlap',
+            'role_tim' => 'required|string|in:dospem,tim,korlap,mitra',
             'keterangan' => 'nullable|string|max:500',
         ]);
 
@@ -185,12 +158,12 @@ class Detail extends Component
                 // Update existing tim member
                 $timMember = KelompokUser::findOrFail($this->timId);
                 $timMember->update([
-                    'role' => $this->role,
+                    'role' => $this->role_tim,
                     'keterangan' => $this->keterangan,
                 ]);
                 
                 $this->dispatch('swal', [
-                    'type' => 'success',
+                    'icon' => 'success',
                     'title' => 'Berhasil',
                     'text' => 'Tim berhasil diperbarui',
                 ]);
@@ -208,22 +181,23 @@ class Detail extends Component
                 KelompokUser::create([
                     'kelompok_id' => $this->kelompokID,
                     'user_id' => $this->selected_user_id,
-                    'role' => $this->role,
+                    'role' => $this->role_tim,
                     'keterangan' => $this->keterangan,
                 ]);
                 
                 $this->dispatch('swal', [
-                    'type' => 'success',
+                    'icon' => 'success',
                     'title' => 'Berhasil',
                     'text' => 'Tim berhasil ditambahkan ke kelompok',
                 ]);
             }
             
             $this->closeTimModal();
+            $this->dispatch('refresh-tim');
             
         } catch (\Exception $e) {
             $this->dispatch('swal', [
-                'type' => 'error',
+                'icon' => 'error',
                 'title' => 'Gagal',
                 'text' => $e->getMessage(),
             ]);
@@ -240,14 +214,14 @@ class Detail extends Component
             $timMember->delete();
             
             $this->dispatch('swal', [
-                'type' => 'success',
+                'icon' => 'success',
                 'title' => 'Berhasil',
                 'text' => 'Tim berhasil dihapus dari kelompok',
             ]);
             
         } catch (\Exception $e) {
             $this->dispatch('swal', [
-                'type' => 'error',
+                'icon' => 'error',
                 'title' => 'Gagal',
                 'text' => 'Gagal menghapus tim: ' . $e->getMessage(),
             ]);
@@ -262,7 +236,7 @@ class Detail extends Component
         $timMember = KelompokUser::with('user')->findOrFail($id);
         
         $this->dispatch('swal', [
-            'type' => 'info',
+            'icon' => 'info',
             'title' => 'Detail Tim',
             'text' => "Nama: " . $timMember->user->name . "\nEmail: " . $timMember->user->email . "\nRole: " . ucfirst(str_replace('_', ' ', $timMember->role)),
         ]);
@@ -276,12 +250,12 @@ class Detail extends Component
         $anggota = KelompokUser::with('user')->findOrFail($id);
         $data = json_decode($anggota->user->data_mahasiswa ?? '{}', true);
         
-        $nim = isset($data['nim']) ? $data['nim'] : '-';
-        $nama = isset($data['nama_mahasiswa']) ? $data['nama_mahasiswa'] : '-';
-        $prodi = isset($data['nama_program_studi']) ? $data['nama_program_studi'] : '-';
+        $nim = $data['nim'] ?? '-';
+        $nama = $data['nama_mahasiswa'] ?? '-';
+        $prodi = $data['nama_program_studi'] ?? '-';
         
         $this->dispatch('swal', [
-            'type' => 'info',
+            'icon' => 'info',
             'title' => 'Detail Mahasiswa',
             'text' => "NIM: " . $nim . "\nNama: " . $nama . "\nProdi: " . $prodi,
         ]);
@@ -301,14 +275,14 @@ class Detail extends Component
                 $anggota->delete();
                 
                 $this->dispatch('swal', [
-                    'type' => 'success',
+                    'icon' => 'success',
                     'title' => 'Berhasil',
                     'text' => 'Anggota berhasil dikeluarkan dari kelompok',
                 ]);
             }
         } catch (\Exception $e) {
             $this->dispatch('swal', [
-                'type' => 'error',
+                'icon' => 'error',
                 'title' => 'Gagal',
                 'text' => 'Gagal mengeluarkan anggota: ' . $e->getMessage(),
             ]);
@@ -325,14 +299,14 @@ class Detail extends Component
             ->where('role', 'mahasiswa')
             ->get();
         
-        if (is_null($anggota) || $anggota->count() == 0) {
+        if ($anggota->isEmpty()) {
             return 0;
         }
         
         $prodiIds = [];
         foreach ($anggota as $member) {
-            $data = json_decode($member->user->data_mahasiswa, true);
-            if (is_array($data) && !empty($data['id_prodi'])) {
+            $data = json_decode($member->user->data_mahasiswa ?? '{}', true);
+            if (!empty($data['id_prodi'])) {
                 $prodiIds[$data['id_prodi']] = true;
             }
         }
@@ -349,7 +323,7 @@ class Detail extends Component
             ->where('role', 'mahasiswa')
             ->get();
         
-        if (is_null($anggota) || $anggota->count() == 0) {
+        if ($anggota->isEmpty()) {
             return 0;
         }
         
@@ -357,7 +331,7 @@ class Detail extends Component
         $count = 0;
         
         foreach ($anggota as $member) {
-            if (isset($member->semester) && $member->semester) {
+            if (!empty($member->semester)) {
                 $totalSemester += $member->semester;
                 $count++;
             }

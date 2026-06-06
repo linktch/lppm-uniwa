@@ -9,8 +9,12 @@
                         <i class="fas fa-users text-white text-xl"></i>
                     </div>
                     <div>
-                        <h4 class="text-lg md:text-xl font-semibold text-gray-800">Manajemen Kelompok KKN</h4>
-                        <p class="text-xs md:text-sm text-gray-500">Kelola data kelompok Kuliah Kerja Nyata</p>
+                        <h4 class="text-lg md:text-xl font-semibold text-gray-800">
+                            Manajemen Kelompok {{ $jenisKegiatan ?? 'KKN' }}
+                        </h4>
+                        <p class="text-xs md:text-sm text-gray-500">
+                            Kelola data kelompok {{ $jenisKegiatan ?? 'Kuliah Kerja Nyata' }}
+                        </p>
                     </div>
                 </div>
                 <button wire:click="openModal"
@@ -52,9 +56,10 @@
                     class="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 flex items-center justify-center">
                     <i class="fas fa-list text-white text-sm"></i>
                 </div>
-                <h5 class="font-semibold text-gray-800">Daftar Kelompok KKN</h5>
-                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Total: {{ $kelompoks->total() }}
-                    Kelompok</span>
+                <h5 class="font-semibold text-gray-800">Daftar Kelompok {{ $jenisKegiatan ?? 'KKN' }}</h5>
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    Total: {{ $kelompoks->total() }} Kelompok
+                </span>
             </div>
         </div>
 
@@ -84,23 +89,12 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                                No</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Nama Kelompok</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                Periode</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                Kegiatan KKN</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
-                                Lokasi</th>
-                            <th
-                                class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                                Aksi</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">No</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kelompok</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Periode</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kegiatan</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">Lokasi</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -109,11 +103,9 @@
                             <td class="px-4 py-3 text-sm text-gray-500">{{ $kelompoks->firstItem() + $index }}</td>
                             <td class="px-4 py-3">
                                 <div>
-                                    <strong
-                                        class="text-sm font-semibold text-gray-800">{{ $kelompok->nama_kelompok }}</strong>
+                                    <strong class="text-sm font-semibold text-gray-800">{{ $kelompok->nama_kelompok }}</strong>
                                     <div class="mt-1">
-                                        <span
-                                            class="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-50 text-cyan-700 text-xs rounded-full">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-50 text-cyan-700 text-xs rounded-full">
                                             <i class="fas fa-user-graduate text-xs"></i>
                                             Anggota: {{ $kelompok->anggota_count ?? 'Belum ada anggota' }}
                                         </span>
@@ -121,22 +113,19 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <span
-                                    class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
                                     <i class="fas fa-calendar"></i>
                                     {{ $kelompok->periode->nama_periode ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <span
-                                    class="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded-full">
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded-full">
                                     <i class="fas fa-tasks"></i>
                                     {{ $kelompok->kegiatan->nama_kegiatan ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <span
-                                    class="inline-flex items-center gap-1 px-2 py-1 bg-sky-50 text-sky-700 text-xs rounded-full">
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-sky-50 text-sky-700 text-xs rounded-full">
                                     <i class="fas fa-map-marker-alt"></i>
                                     {{ $kelompok->lokasi ?? '-' }}
                                 </span>
@@ -144,22 +133,21 @@
                             <td class="px-4 py-3 text-center">
                                 <div class="flex gap-2 justify-center">
                                     <a href="{{ route('kegiatan.kelompok.detail', [
-    'role' => auth()->user()->role, 
-    'jenisKegiatan' => $jenisKegiatan ?? 'KKN',
-    'kelompokID' => $kelompok->id
-]) }}" 
-   wire:navigate 
-   class="w-9 h-9 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition group relative inline-flex items-center justify-center">
-    <i class="fas fa-info-circle"></i>
-    <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
-        Detail Kelompok
-    </span>
-</a>
+                                        'role' => $role, 
+                                        'jenisKegiatan' => $jenisKegiatan ?? 'KKN',
+                                        'kelompokID' => $kelompok->id
+                                    ]) }}" 
+                                       wire:navigate 
+                                       class="w-9 h-9 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition group relative inline-flex items-center justify-center">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
+                                            Detail Kelompok
+                                        </span>
+                                    </a>
                                     <button wire:click="editKelompok({{ $kelompok->id }})"
                                         class="w-9 h-9 rounded-lg bg-yellow-50 hover:bg-yellow-100 text-yellow-600 transition group relative inline-flex items-center justify-center">
                                         <i class="fas fa-edit"></i>
-                                        <span
-                                            class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
+                                        <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
                                             Edit Kelompok
                                         </span>
                                     </button>
@@ -167,8 +155,7 @@
                                         wire:click="$dispatch('confirmDelete', { type: 'kelompok', id: {{ $kelompok->id }} })"
                                         class="w-9 h-9 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition group relative inline-flex items-center justify-center">
                                         <i class="fas fa-trash-alt"></i>
-                                        <span
-                                            class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
+                                        <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
                                             Hapus Kelompok
                                         </span>
                                     </button>
@@ -180,9 +167,8 @@
                             <td colspan="6" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center gap-2">
                                     <i class="fas fa-users text-gray-400 text-5xl"></i>
-                                    <p class="text-gray-500">Belum ada kelompok KKN</p>
-                                    <small class="text-gray-400">Klik tombol "Tambah Kelompok" untuk membuat kelompok
-                                        baru</small>
+                                    <p class="text-gray-500">Belum ada kelompok {{ $jenisKegiatan ?? 'KKN' }}</p>
+                                    <small class="text-gray-400">Klik tombol "Tambah Kelompok" untuk membuat kelompok baru</small>
                                 </div>
                             </td>
                         </tr>
@@ -202,8 +188,7 @@
 
     <!-- Modal Tambah/Edit Kelompok -->
     @if($showModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto"
-        style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px);">
+    <div class="fixed inset-0 z-50 overflow-y-auto" style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px);">
         <div class="flex items-center justify-center min-h-screen px-4 py-6">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                 <!-- Header -->
@@ -213,15 +198,11 @@
                             <i class="fas {{ $isEditing ? 'fa-edit' : 'fa-plus-circle' }} text-white"></i>
                         </div>
                         <div>
-                            <h5 class="text-white font-semibold">
-                                {{ $isEditing ? 'Edit Kelompok' : 'Tambah Kelompok Baru' }}</h5>
-                            <p class="text-white/80 text-xs">
-                                {{ $isEditing ? 'Ubah data kelompok' : 'Silakan isi form di bawah ini' }}</p>
+                            <h5 class="text-white font-semibold">{{ $isEditing ? 'Edit Kelompok' : 'Tambah Kelompok Baru' }}</h5>
+                            <p class="text-white/80 text-xs">{{ $isEditing ? 'Ubah data kelompok' : 'Silakan isi form di bawah ini' }}</p>
                         </div>
                     </div>
-                    <button type="button"
-                        class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition"
-                        wire:click="closeModal">
+                    <button type="button" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition" wire:click="closeModal">
                         <i class="fas fa-times text-white text-sm"></i>
                     </button>
                 </div>
@@ -254,8 +235,7 @@
                             <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
-                            <i
-                                class="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <i class="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                             <select wire:model="periode_id"
                                 class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('periode_id') border-red-500 @enderror">
                                 <option value="">Pilih Periode</option>
@@ -273,18 +253,17 @@
                         @enderror
                     </div>
 
-                    <!-- Kegiatan KKN -->
+                    <!-- Kegiatan -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                            <i class="fas fa-tasks text-gray-400 mr-1"></i> Kegiatan KKN
+                            <i class="fas fa-tasks text-gray-400 mr-1"></i> Kegiatan
                             <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
-                            <i
-                                class="fas fa-briefcase absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <i class="fas fa-briefcase absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                             <select wire:model="kegiatan_id"
                                 class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('kegiatan_id') border-red-500 @enderror">
-                                <option value="">Pilih Kegiatan KKN</option>
+                                <option value="">Pilih Kegiatan</option>
                                 @foreach($kegiatans as $kegiatan)
                                 <option value="{{ $kegiatan->id }}">{{ $kegiatan->nama_kegiatan }}</option>
                                 @endforeach
@@ -300,12 +279,11 @@
                     <!-- Lokasi -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                            <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i> Lokasi KKN
+                            <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i> Lokasi
                             <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
-                            <i
-                                class="fas fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <i class="fas fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                             <input type="text" wire:model="lokasi"
                                 class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('lokasi') border-red-500 @enderror"
                                 placeholder="Contoh: Desa Sukamaju, Kec. Cisarua, Kab. Bogor">
@@ -320,17 +298,11 @@
 
                 <!-- Footer -->
                 <div class="flex justify-end gap-3 p-5 border-t border-gray-100 bg-gray-50">
-                    <button type="button"
-                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-sm font-medium transition"
-                        wire:click="closeModal">
+                    <button type="button" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-sm font-medium transition" wire:click="closeModal">
                         <i class="fas fa-times mr-1"></i> Batal
                     </button>
-                    <button type="button"
-                        class="px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white rounded-full text-sm font-medium transition"
-                        wire:click="save" wire:loading.attr="disabled">
-                        <span wire:loading.remove><i
-                                class="fas {{ $isEditing ? 'fa-save' : 'fa-plus-circle' }} mr-1"></i>
-                            {{ $isEditing ? 'Update' : 'Simpan' }}</span>
+                    <button type="button" class="px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white rounded-full text-sm font-medium transition" wire:click="save" wire:loading.attr="disabled">
+                        <span wire:loading.remove><i class="fas {{ $isEditing ? 'fa-save' : 'fa-plus-circle' }} mr-1"></i> {{ $isEditing ? 'Update' : 'Simpan' }}</span>
                         <span wire:loading><i class="fas fa-spinner fa-pulse mr-1"></i> Menyimpan...</span>
                     </button>
                 </div>

@@ -4,7 +4,7 @@ namespace App\Livewire\Timeline;
 
 use App\Models\TimelineKegiatan;
 use App\Models\Periode;
-use App\Services\KKNService;
+use App\Services\KegiatanService;
 use App\Models\Kegiatan;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,7 +17,7 @@ class Index extends Component
     use WithPagination;
     
     public $role;
-    public $jenisKegiatan; // Berubah dari $jenis menjadi $jenisKegiatan
+    public $jenisKegiatan; // KKN, PKM, PAM, PKL
     
     public $search = '';
     public $perPage = 10;
@@ -32,7 +32,7 @@ class Index extends Component
     public $tanggal_mulai;
     public $tanggal_selesai;
     public $status = 'AKTIF';
-    public $jenisTimeline = ''; // Untuk jenis timeline (Pendaftaran, Pembekalan, dll)
+    public $jenisTimeline = '';
     
     // Additional properties
     public $periodeList = [];
@@ -59,48 +59,25 @@ class Index extends Component
         'selectedKegiatanId.required' => 'Kegiatan wajib dipilih',
     ];
     
-    public function mount($role, $jenisKegiatan) // Parameter berubah
+    public function mount($role, $jenisKegiatan)
     {
-        $this->jenisKegiatan = $jenisKegiatan; // Simpan jenis kegiatan dari route
+        $this->jenisKegiatan = $jenisKegiatan;
         $this->role = $role;
         
-        // Tentukan kegiatan ID berdasarkan jenis kegiatan
-        $this->kegiatanID = $this->getKegiatanId($jenisKegiatan);
-        $this->periodeFilter = $this->getPeriodeId($jenisKegiatan);
+        // Dapatkan kegiatan ID dan periode ID menggunakan KegiatanService
+        $this->kegiatanID = KegiatanService::getKegiatanId($jenisKegiatan);
+        $this->periodeFilter = KegiatanService::getPeriodeId($jenisKegiatan);
         
         $this->loadLists();
-    }
-    
-    private function getKegiatanId($jenisKegiatan)
-    {
-        switch ($jenisKegiatan) {
-            case 'KKN':
-                return KKNService::kegiatanId('KKN');
-            case 'PKL':
-                return KKNService::kegiatanId('PKL');
-            case 'PMM':
-                return KKNService::kegiatanId('PMM');
-            default:
-                return KKNService::kegiatanId('KKN');
-        }
-    }
-    
-    private function getPeriodeId($jenisKegiatan)
-    {
-        switch ($jenisKegiatan) {
-            case 'KKN':
-                return KKNService::periodeId();
-            case 'PKL':
-                return KKNService::periodeIdPkl();
-            default:
-                return KKNService::periodeId();
-        }
     }
     
     private function loadLists()
     {
         $this->periodeList = Periode::orderBy('id', 'desc')->get();
-        $this->kegiatanList = Kegiatan::where('id', $this->kegiatanID)->get();
+        
+        // Ambil kegiatan berdasarkan jenis
+        $kegiatan = Kegiatan::where('id', $this->kegiatanID)->first();
+        $this->kegiatanList = $kegiatan ? collect([$kegiatan]) : collect();
         
         $this->selectedPeriodeId = $this->periodeFilter;
         $this->selectedKegiatanId = $this->kegiatanID;
@@ -109,11 +86,12 @@ class Index extends Component
     public function openCreateModal()
     {
         $this->resetForm();
+        $this->resetValidation();
         $this->isEdit = false;
         $this->timelineId = null;
         $this->selectedPeriodeId = $this->periodeFilter;
         $this->selectedKegiatanId = $this->kegiatanID;
-        $this->jenisTimeline = 'Pendaftaran'; // Default value
+        $this->jenisTimeline = 'Pendaftaran';
         $this->showModal = true;
     }
     
@@ -151,11 +129,10 @@ class Index extends Component
     
     public function save()
     {
-
         $this->validate();
-   
         
         try {
+            // Cek duplikasi
             $exists = TimelineKegiatan::where('periode_id', $this->selectedPeriodeId)
                 ->where('kegiatan_id', $this->selectedKegiatanId)
                 ->where('jenis', $this->jenisTimeline)
@@ -165,7 +142,11 @@ class Index extends Component
                 ->exists();
                 
             if ($exists) {
-                session()->flash('error', 'Timeline untuk periode dan kegiatan ini sudah ada');
+                $this->dispatch('swal', [
+                    'icon' => 'error',
+                    'title' => 'Gagal!',
+                    'text' => 'Timeline untuk periode dan kegiatan ini sudah ada'
+                ]);
                 return;
             }
             
@@ -187,13 +168,24 @@ class Index extends Component
                 $message = 'Timeline kegiatan berhasil ditambahkan';
             }
             
-            session()->flash('success', $message);
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => $message,
+                'timer' => 2000,
+                'showConfirmButton' => false
+            ]);
+            
             $this->closeModal();
             $this->resetPage();
             
         } catch (\Exception $e) {
             Log::error('Error saving timeline: ' . $e->getMessage());
-            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Gagal!',
+                'text' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
         }
     }
     
@@ -203,12 +195,23 @@ class Index extends Component
             $timeline = TimelineKegiatan::findOrFail($id);
             $timeline->delete();
             
-            session()->flash('success', 'Timeline kegiatan berhasil dihapus');
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => 'Timeline kegiatan berhasil dihapus',
+                'timer' => 2000,
+                'showConfirmButton' => false
+            ]);
+            
             $this->resetPage();
             
         } catch (\Exception $e) {
             Log::error('Error deleting timeline: ' . $e->getMessage());
-            session()->flash('error', 'Gagal menghapus timeline: ' . $e->getMessage());
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Gagal!',
+                'text' => 'Gagal menghapus timeline: ' . $e->getMessage()
+            ]);
         }
     }
     
@@ -219,11 +222,22 @@ class Index extends Component
             $timeline->update(['status' => $status]);
             
             $statusText = $status == 'AKTIF' ? 'diaktifkan' : 'dinonaktifkan';
-            session()->flash('success', "Status timeline berhasil {$statusText}");
+            
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => "Status timeline berhasil {$statusText}",
+                'timer' => 2000,
+                'showConfirmButton' => false
+            ]);
             
         } catch (\Exception $e) {
             Log::error('Error updating status: ' . $e->getMessage());
-            session()->flash('error', 'Gagal mengubah status: ' . $e->getMessage());
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Gagal!',
+                'text' => 'Gagal mengubah status: ' . $e->getMessage()
+            ]);
         }
     }
     
@@ -257,7 +271,7 @@ class Index extends Component
                         $q2->where('nama_kegiatan', 'like', '%' . $this->search . '%');
                     })->orWhereHas('periode', function($q2) {
                         $q2->where('nama_periode', 'like', '%' . $this->search . '%');
-                    });
+                    })->orWhere('jenis', 'like', '%' . $this->search . '%');
                 });
             })
             ->when($this->statusFilter, function($query) {
@@ -266,11 +280,19 @@ class Index extends Component
             ->orderBy('tanggal_mulai', 'asc')
             ->paginate($this->perPage);
         
+        // Header title berdasarkan jenis kegiatan
+        $headerTitle = [
+            'KKN' => 'Timeline Kegiatan KKN',
+            'PKM' => 'Timeline Kegiatan PKM',
+            'PAM' => 'Timeline Kegiatan PAM',
+        ];
+        
         return view('livewire.timeline.index', [
             'timelines' => $timelines,
             'periodeList' => $this->periodeList,
             'kegiatanList' => $this->kegiatanList,
-            'jenisKegiatan' => $this->jenisKegiatan, // Kirim ke view
+            'jenisKegiatan' => $this->jenisKegiatan,
+            'headerTitle' => $headerTitle[$this->jenisKegiatan] ?? 'Timeline Kegiatan',
         ]);
     }
 }

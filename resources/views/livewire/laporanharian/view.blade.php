@@ -22,7 +22,7 @@
                 @endif
                 
                 @if(Auth::user()->role == 'mahasiswa' && $data['status'] == 'revisi')
-                    <a href="{{ route('kegiatan.kkn.laporanharian.update', ['role' => auth()->user()->role, 'id' => $data['id']]) }}" 
+                    <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/laporan-harian/{$data['id']}/update") }}" 
                        wire:navigate
                        class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white rounded-lg text-sm font-medium transition">
                         <i class="fas fa-undo mr-1"></i> Revisi Laporan
@@ -300,7 +300,7 @@
             <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
                 <div class="p-5">
                     <div class="flex justify-end">
-                        <a href="{{ route('kegiatan.kkn.laporanharian.update', ['role' => auth()->user()->role, 'id' => $data['id']]) }}"
+                       <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/laporan-harian/{$data['id']}/update") }}" 
                             wire:navigate
                             class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition">
                             <i class="fas fa-undo mr-1"></i> Revisi Laporan

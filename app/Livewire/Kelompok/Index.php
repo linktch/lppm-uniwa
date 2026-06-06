@@ -5,7 +5,7 @@ namespace App\Livewire\Kelompok;
 use App\Models\Kegiatan;
 use App\Models\Kelompok;
 use App\Models\Periode;
-use App\Services\KKNService;
+use App\Services\KegiatanService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -15,18 +15,18 @@ class Index extends Component
 {
     use WithPagination;
 
-    // 🔥 Data dari Service
+    // Data dari Service
     public $kegiatanID;
     public $periodeFilter;
-    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
-    public $role; // TAMBAHKAN PROPERTY ROLE
+    public $jenisKegiatan;
+    public $role;
     
-    // 🔥 Filter & Search
+    // Filter & Search
     public $search = '';
     public $selectedPeriode = '';
     public $selectedKegiatan = '';
     
-    // 🔥 Modal Properties
+    // Modal Properties
     public $showModal = false;
     public $isEditing = false;
     public $kelompok_id;
@@ -46,55 +46,26 @@ class Index extends Component
         ]);
     }
 
-    public function mount($role, $jenisKegiatan = 'KKN') // TAMBAHKAN PARAMETER
+    public function mount($role, $jenisKegiatan = 'KKN')
     {
-        $this->role = $role; // SIMPAN ROLE
-        $this->jenisKegiatan = $jenisKegiatan; // SIMPAN JENIS KEGIATAN
+        $this->role = $role;
+        $this->jenisKegiatan = $jenisKegiatan;
         
-        // Tentukan kegiatan ID berdasarkan jenis kegiatan
-        $this->kegiatanID = $this->getKegiatanId($jenisKegiatan);
-        $this->periodeFilter = $this->getPeriodeId($jenisKegiatan);
+        // Gunakan KegiatanService untuk mendapatkan ID
+        $this->kegiatanID = KegiatanService::getKegiatanId($jenisKegiatan);
+        $this->periodeFilter = KegiatanService::getPeriodeId($jenisKegiatan);
         
-        $aktif = Periode::where('status', 'AKTIF')->first();
-        $this->selectedPeriode = $aktif?->id;
+        $this->selectedPeriode = $this->periodeFilter;
         $this->selectedKegiatan = $this->kegiatanID;
-    }
-    
-    // TAMBAHKAN METHOD untuk mendapatkan kegiatan ID berdasarkan jenis
-    private function getKegiatanId($jenisKegiatan)
-    {
-        switch ($jenisKegiatan) {
-            case 'KKN':
-                return KKNService::kegiatanId('KKN');
-            case 'PKL':
-                return KKNService::kegiatanId('PKL');
-            case 'PMM':
-                return KKNService::kegiatanId('PMM');
-            default:
-                return KKNService::kegiatanId('KKN');
-        }
-    }
-    
-    // TAMBAHKAN METHOD untuk mendapatkan periode ID berdasarkan jenis
-    private function getPeriodeId($jenisKegiatan)
-    {
-        switch ($jenisKegiatan) {
-            case 'KKN':
-                return KKNService::periodeId();
-            case 'PKL':
-                return KKNService::periodeIdPkl();
-            default:
-                return KKNService::periodeId();
-        }
     }
 
     public function render()
     {
-        // 🔥 Ambil data untuk dropdown filter
+        // Ambil data untuk dropdown filter
         $periodes = Periode::all();
         $kegiatans = Kegiatan::all();
 
-        // 🔥 Query kelompok dengan filter
+        // Query kelompok dengan filter
         $kelompoks = Kelompok::with(['periode', 'kegiatan'])
             ->when($this->kegiatanID, function ($query) {
                 $query->where('kegiatan_id', $this->kegiatanID);
@@ -115,12 +86,11 @@ class Index extends Component
             'periodes' => $periodes,
             'kegiatans' => $kegiatans,
             'kelompoks' => $kelompoks,
-            'role' => $this->role, // KIRIM KE VIEW
-            'jenisKegiatan' => $this->jenisKegiatan, // KIRIM KE VIEW
+            'role' => $this->role,
+            'jenisKegiatan' => $this->jenisKegiatan,
         ]);
     }
 
-    // 🔥 Buka modal tambah
     public function openModal()
     {
         $this->resetForm();
@@ -129,7 +99,6 @@ class Index extends Component
         $this->showModal = true;
     }
 
-    // 🔥 Edit kelompok
     public function editKelompok($id)
     {
         $kelompok = Kelompok::findOrFail($id);
@@ -138,12 +107,11 @@ class Index extends Component
         $this->nama_kelompok = $kelompok->nama_kelompok;
         $this->periode_id = $kelompok->periode_id;
         $this->kegiatan_id = $kelompok->kegiatan_id;
-        $this->lokasi = $kelompok->lokasi; // TAMBAHKAN
+        $this->lokasi = $kelompok->lokasi;
         $this->isEditing = true;
         $this->showModal = true;
     }
 
-    // 🔥 Simpan (create/update)
     public function save()
     {
         $this->validate([
@@ -182,12 +150,12 @@ class Index extends Component
         }
     }
 
-    // 🔥 Hapus kelompok
     public function deleteKelompok($id)
     {
         try {
             $kelompok = Kelompok::findOrFail($id);
 
+            // Cek apakah kelompok masih memiliki anggota
             if ($kelompok->anggota()->count() > 0) {
                 $this->alert('error', 'Gagal', 'Kelompok masih memiliki anggota');
                 return;
@@ -201,7 +169,6 @@ class Index extends Component
         }
     }
 
-    // 🔥 Reset form
     public function resetForm()
     {
         $this->kelompok_id = null;
@@ -212,14 +179,12 @@ class Index extends Component
         $this->isEditing = false;
     }
 
-    // 🔥 Close modal
     public function closeModal()
     {
         $this->showModal = false;
         $this->resetForm();
     }
 
-    // 🔥 Reset filter
     public function resetFilter()
     {
         $this->search = '';

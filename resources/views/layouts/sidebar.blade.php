@@ -24,23 +24,27 @@ $kegiatanActive = request()->is("$role/kegiatan/*") ?? false;
     <!-- Sidebar Content -->
     <div class="flex-1 flex flex-col py-4 px-3">
         
-        <!-- User Panel -->
-        <div class="flex items-center gap-3 pb-4 mb-3 border-b border-white/10">
-            <div class="flex-shrink-0">
-                <img src="{{ asset('adminlte/dist/img/user2-160x160.jpg') }}" 
-                     class="w-9 h-9 rounded-full object-cover ring-2 ring-[#2c7da0]"
-                     alt="User Image">
-            </div>
-            <div class="flex-1 min-w-0">
-                <a href="#" class="text-white font-medium text-sm truncate hover:text-white/90 transition">
-                    {{ auth()->user()->first_name ?? '' }} {{ auth()->user()->last_name ?? '' }}
-                </a>
-                <p class="text-[#6ab0d6] text-xs flex items-center gap-1 mt-0.5">
-                    <i class="fas fa-user-shield text-[10px]"></i> 
-                    {{ auth()->user()->role ?? 'Super Admin' }}
-                </p>
-            </div>
-        </div>
+       <!-- User Panel -->
+<div class="flex items-center gap-3 pb-4 mb-3 border-b border-white/10">
+    <div class="flex-shrink-0">
+        @php
+            $user = auth()->user();
+            $fotoUrl = $user->foto ? Storage::url($user->foto) : asset('adminlte/dist/img/user2-160x160.jpg');
+        @endphp
+        <img src="{{ $fotoUrl }}" 
+             class="w-9 h-9 rounded-full object-cover ring-2 ring-[#2c7da0]"
+             alt="User Image">
+    </div>
+    <div class="flex-1 min-w-0">
+        <a href="#" class="text-white font-medium text-sm truncate hover:text-white/90 transition">
+            {{ auth()->user()->first_name ?? '' }} {{ auth()->user()->last_name ?? '' }}
+        </a>
+        <p class="text-[#6ab0d6] text-xs flex items-center gap-1 mt-0.5">
+            <i class="fas fa-user-shield text-[10px]"></i> 
+            {{ auth()->user()->role ?? 'Super Admin' }}
+        </p>
+    </div>
+</div>
 
         <!-- Navigation Menu -->
         <nav class="flex-1">
@@ -107,7 +111,7 @@ $kegiatanActive = request()->is("$role/kegiatan/*") ?? false;
                     </button>
                     
                     <ul class="submenu pl-7 mt-1 space-y-1 {{ $kegiatanActive ? '' : 'hidden' }}">
-                        @foreach (['KKN'] as $item)
+                        @foreach (['PKM','KKN'] as $item)
                         <li>
                             <a wire:navigate href="{{ url("$baseUrl/$item/index") }}"
                                class="flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all duration-200 text-white/70 hover:bg-white/5 hover:text-white text-sm {{ request()->is("$role/kegiatan/$item*") ? 'bg-white/10 text-white' : '' }}">

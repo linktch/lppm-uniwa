@@ -5,7 +5,7 @@ namespace App\Livewire\Kelompok;
 use App\Models\Kelompok;
 use App\Models\KelompokUser;
 use App\Models\User;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\Services\KegiatanService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -15,15 +15,15 @@ class Add extends Component
 {
     use WithPagination;
 
-    // protected $paginationTheme = 'bootstrap';
-
-    // 🔥 Data utama
+    // Data utama
     public $kelompok;
     public $kelompokID;
-    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
-    public $role; // TAMBAHKAN PROPERTY ROLE
+    public $jenisKegiatan;
+    public $role;
+    public $periode_id;
+    public $kegiatan_id;
     
-    // 🔥 UI state
+    // UI state
     public $selectedMahasiswa = [];
     public $selectAll = false;
     public $searchMahasiswa = '';
@@ -34,13 +34,15 @@ class Add extends Component
      * | MOUNT
      * |--------------------------------------------------------------------------
      */
-    public function mount($role, $jenisKegiatan, $kelompokID) // TAMBAHKAN PARAMETER role DAN jenisKegiatan
+    public function mount($role, $jenisKegiatan, $kelompokID)
     {
-        $this->role = $role; // SIMPAN ROLE
-        $this->jenisKegiatan = $jenisKegiatan; // SIMPAN JENIS KEGIATAN
+        $this->role = $role;
+        $this->jenisKegiatan = $jenisKegiatan;
         $this->kelompokID = $kelompokID;
 
         $this->kelompok = Kelompok::findOrFail($kelompokID);
+        $this->periode_id = $this->kelompok->periode_id;
+        $this->kegiatan_id = $this->kelompok->kegiatan_id;
     }
 
     /*
@@ -66,12 +68,45 @@ class Add extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selectedMahasiswa = User::where('role', 'mahasiswa')
-                ->pluck('id')
-                ->toArray();
+            // Ambil semua mahasiswa yang memenuhi kriteria
+            $allMahasiswa = $this->getFilteredMahasiswaQuery()->get();
+            $this->selectedMahasiswa = $allMahasiswa->pluck('id')->toArray();
         } else {
             $this->selectedMahasiswa = [];
         }
+    }
+
+    /*
+     * |--------------------------------------------------------------------------
+     * | GET FILTERED MAHASISWA QUERY
+     * |--------------------------------------------------------------------------
+     */
+    private function getFilteredMahasiswaQuery()
+    {
+        $query = User::where('role', 'mahasiswa')
+            ->whereDoesntHave('kelompokUser', function ($q) {
+                $q->whereHas('kelompok', function ($qq) {
+                    $qq->where('periode_id', $this->periode_id)
+                        ->where('kegiatan_id', $this->kegiatan_id);
+                });
+            });
+
+        // Filter angkatan
+        if ($this->filterAngkatan) {
+            $query->where(function ($q) {
+                $q->where('data_mahasiswa', 'like', '%' . $this->filterAngkatan . '%');
+            });
+        }
+
+        // Search
+        if ($this->searchMahasiswa) {
+            $query->where(function ($q) {
+                $q->where('data_mahasiswa', 'like', '%' . $this->searchMahasiswa . '%')
+                    ->orWhere('data_mahasiswa', 'like', '%' . $this->searchMahasiswa . '%');
+            });
+        }
+
+        return $query;
     }
 
     /*
@@ -82,21 +117,42 @@ class Add extends Component
     public function saveMahasiswa()
     {
         if (empty($this->selectedMahasiswa)) {
-            $this->dispatch('swal', icon: 'warning', title: 'Pilih dulu', text: 'Belum ada mahasiswa dipilih');
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Pilih dulu',
+                'text' => 'Belum ada mahasiswa dipilih'
+            ]);
             return;
         }
 
+        $successCount = 0;
+        $failedCount = 0;
+
         foreach ($this->selectedMahasiswa as $userId) {
-            KelompokUser::firstOrCreate([
-                'kelompok_id' => $this->kelompokID,
-                'user_id' => $userId,
-                'role' => 'mahasiswa',
-            ]);
+            try {
+                KelompokUser::firstOrCreate([
+                    'kelompok_id' => $this->kelompokID,
+                    'user_id' => $userId,
+                    'role' => 'mahasiswa',
+                ]);
+                $successCount++;
+            } catch (\Exception $e) {
+                $failedCount++;
+            }
         }
 
-        $this->dispatch('swal', icon: 'success', title: 'Berhasil', text: 'Mahasiswa berhasil ditambahkan');
+        $message = "Berhasil menambahkan {$successCount} mahasiswa";
+        if ($failedCount > 0) {
+            $message .= ", {$failedCount} gagal";
+        }
 
-        // PERBAIKI redirect dengan parameter lengkap
+        $this->dispatch('swal', [
+            'icon' => 'success',
+            'title' => 'Berhasil',
+            'text' => $message
+        ]);
+
+        // Redirect ke detail kelompok
         return redirect()->route('kegiatan.kelompok.detail', [
             'role' => $this->role,
             'jenisKegiatan' => $this->jenisKegiatan,
@@ -111,7 +167,6 @@ class Add extends Component
      */
     public function backToDetail()
     {
-        // PERBAIKI redirect dengan parameter lengkap
         return redirect()->route('kegiatan.kelompok.detail', [
             'role' => $this->role,
             'jenisKegiatan' => $this->jenisKegiatan,
@@ -124,67 +179,37 @@ class Add extends Component
      * | RENDER
      * |--------------------------------------------------------------------------
      */
-
     public function render()
     {
-        // 🔥 1. QUERY
+        // Query mahasiswa
         $query = User::where('role', 'mahasiswa')
             ->whereDoesntHave('kelompokUser', function ($q) {
                 $q->whereHas('kelompok', function ($qq) {
-                    $qq
-                        ->where('periode_id', $this->kelompok->periode_id)
-                        ->where('kegiatan_id', $this->kelompok->kegiatan_id);
+                    $qq->where('periode_id', $this->periode_id)
+                        ->where('kegiatan_id', $this->kegiatan_id);
                 });
             });
 
-        // 🔥 2. AMBIL DATA JADI COLLECTION
-        $collection = $query->get();
-
-        // 🔥 3. FILTER ANGKATAN
+        // Filter angkatan
         if ($this->filterAngkatan) {
-            $collection = $collection->filter(function ($mhs) {
-                $data = is_array($mhs->data_mahasiswa)
-                    ? $mhs->data_mahasiswa
-                    : json_decode($mhs->data_mahasiswa ?? '{}', true);
-
-                return str_contains(
-                    $data['nama_periode_masuk'] ?? '',
-                    $this->filterAngkatan
-                );
-            });
+            $query->where('data_mahasiswa', 'like', '%' . $this->filterAngkatan . '%');
         }
 
-        // 🔍 4. SEARCH
+        // Search
         if ($this->searchMahasiswa) {
-            $collection = $collection->filter(function ($mhs) {
-                $data = is_array($mhs->data_mahasiswa)
-                    ? $mhs->data_mahasiswa
-                    : json_decode($mhs->data_mahasiswa ?? '{}', true);
-
-                return str_contains(strtoupper($data['nama_mahasiswa'] ?? ''), strtoupper($this->searchMahasiswa)) ||
-                    str_contains($data['nim'] ?? '', $this->searchMahasiswa);
+            $query->where(function ($q) {
+                $q->where('data_mahasiswa', 'like', '%' . $this->searchMahasiswa . '%')
+                    ->orWhere('data_mahasiswa', 'like', '%' . $this->searchMahasiswa . '%');
             });
         }
 
-        // 🔥 5. PAGINATION
-        $page = $this->getPage();
-        $perPage = 10;
-
-        $mahasiswas = new \Illuminate\Pagination\LengthAwarePaginator(
-            $collection->forPage($page, $perPage)->values(),
-            $collection->count(),
-            $perPage,
-            $page,
-            [
-                'path' => request()->url(),
-                'query' => request()->query(),
-            ]
-        );
+        $mahasiswas = $query->paginate(10);
 
         return view('livewire.kelompok.add', [
             'mahasiswas' => $mahasiswas,
             'role' => $this->role,
             'jenisKegiatan' => $this->jenisKegiatan,
+            'kelompok' => $this->kelompok,
         ]);
     }
 }

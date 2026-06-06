@@ -28,6 +28,7 @@ class User extends Authenticatable
         'last_name',
         'phone',
         'username',  // 🔥 WAJIB ADA
+        'foto',
         'id_mahasiswa',
         'id_registrasi_mahasiswa',
         'id_prodi',
@@ -91,8 +92,17 @@ class User extends Authenticatable
     {
         return $this->hasMany(ScreeningAnswer::class);
     }
+
     public function pejabatSignaturs()
     {
         return $this->hasMany(PejabatSignatur::class, 'user_id');
+    }
+        // Accessor for foto URL
+    public function getFotoUrlAttribute()
+    {
+        if ($this->foto && \Storage::disk('public')->exists($this->foto)) {
+            return \Storage::url($this->foto);
+        }
+        return null;
     }
 }

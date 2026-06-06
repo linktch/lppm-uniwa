@@ -81,7 +81,7 @@ class Login extends Component
 
     /**
      * Private function untuk cek NIM mahasiswa
-     * 
+     *
      * @return bool
      */
     private function checkMahasiswaNim()
@@ -96,8 +96,11 @@ class Login extends Component
 
             $nim = $dataMahasiswa['nim'] ?? null;
 
-            // Jika NIM bukan 20180310111
-            if ($nim != '20180310111') {
+            // Daftar NIM yang diizinkan
+            $allowedNims = ['20180310111', '20182310014', '20214210032'];
+
+            // Jika NIM tidak ada dalam daftar yang diizinkan
+            if (!in_array($nim, $allowedNims)) {
                 Auth::logout();
                 session()->invalidate();
                 session()->regenerateToken();
@@ -105,7 +108,7 @@ class Login extends Component
                 $this->addError('username', 'Akses ditolak. NIM tidak terdaftar untuk kegiatan ini.');
                 $this->reset('password');
                 $this->dispatch('refreshCaptcha');
-                
+
                 return false;
             }
         }

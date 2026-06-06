@@ -1,22 +1,20 @@
-<div class="p-6">
-    <!-- Header Card -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-        <div class="p-4 md:p-5">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center">
-                    <i class="fas fa-users text-white text-xl"></i>
+<div class="rounded-xl min-h-screen bg-gray-300 pb-20">
+    <!-- Header dengan Gradient -->
+    <div class="rounded-xl bg-gradient-to-r from-blue-700 to-blue-500 text-white sticky top-0 z-10 shadow-lg">
+        <div class="px-4 py-5 md:px-8 md:py-6">
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i class="fas fa-users text-2xl md:text-3xl"></i>
                 </div>
                 <div>
-                    <h4 class="text-lg md:text-xl font-semibold text-gray-800">Manajemen KKN</h4>
-                    <p class="text-xs md:text-sm text-gray-500">
+                    <h1 class="text-xl md:text-2xl font-bold">Manajemen KKN</h1>
+                    <p class="text-xs md:text-sm text-white/80 mt-0.5">
                         @if(auth()->user()->role == 'mahasiswa')
-                        Dashboard Mahasiswa - Kelola partisipasi KKN Anda
+                        Kelola partisipasi KKN Anda
                         @elseif(auth()->user()->role == 'dosen')
-                        Dashboard Dosen - Kelola penilaian dan laporan mahasiswa bimbingan
-                        @elseif(auth()->user()->role == 'prodi')
-                        Dashboard Program Studi - Kelola KKN mahasiswa prodi Anda
+                        Kelola mahasiswa bimbingan
                         @else
-                        Dashboard Administrator - Kelola seluruh kegiatan Kuliah Kerja Nyata
+                        Kelola seluruh kegiatan KKN
                         @endif
                     </p>
                 </div>
@@ -24,313 +22,200 @@
         </div>
     </div>
 
-    <!-- Grid Cards - Teks menyesuaikan role -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-
-        <!-- Card 1: Timeline (Hanya Super Admin) -->
-        @if(auth()->user()->role == 'superadmin')
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-cyan-500 to-cyan-400 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-calendar-alt text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">Pengaturan Timeline</h3>
+    <!-- Grid Menu - Responsive: 2 kolom (mobile) / 4 kolom (desktop) -->
+    <div class="px-4 py-6 md:px-8 md:py-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5">
+            
+            <!-- Menu 1: Timeline (Super Admin Only) -->
+            @if(auth()->user()->role == 'superadmin')
+            <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/timeline") }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-cyan-100 text-cyan-600 flex items-center justify-center mb-3 group-hover:bg-cyan-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-calendar-alt text-xl md:text-2xl"></i>
                 </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    Kelola jadwal dan tenggat waktu kegiatan KKN.
-                </p>
-                <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/timeline") }}"
-                    class="block w-full text-center bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-600 hover:to-cyan-500 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i> Atur Timeline
-                </a>
-            </div>
-        </div>
-        @endif
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">Timeline</h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">Atur jadwal</p>
+            </a>
+            @endif
 
-        <!-- Card 2: Kelola Kelompok (Hanya Super Admin) -->
-        @if(auth()->user()->role == 'superadmin')
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-users text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">Kelola Kelompok</h3>
+            <!-- Menu 2: Kelola Kelompok (Super Admin Only) -->
+            @if(auth()->user()->role == 'superadmin')
+            <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/kelompok") }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-users text-xl md:text-2xl"></i>
                 </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    Kelola data kelompok dan anggota KKN.
-                </p>
-                <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/kelompok") }}"
-                    class="block w-full text-center bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i> Kelola Kelompok
-                </a>
-            </div>
-        </div>
-        @endif
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">Kelompok</h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">Kelola kelompok</p>
+            </a>
+            @endif
 
-        <!-- Card 3: Screening KKN (Admin, Dosen, Prodi) -->
-        @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'prodi', 'kemahasiswaan']))
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-teal-500 to-teal-400 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-clipboard-list text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">Screening KKN</h3>
+            <!-- Menu 3: Screening -->
+            @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'prodi', 'kemahasiswaan']))
+            <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/screening") }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center mb-3 group-hover:bg-teal-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-clipboard-list text-xl md:text-2xl"></i>
                 </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    @if(auth()->user()->role == 'dosen')
-                    Screening mahasiswa bimbingan Anda.
-                    @elseif(auth()->user()->role == 'prodi')
-                    Screening mahasiswa prodi Anda.
-                    @else
-                    Screening dan seleksi peserta KKN.
-                    @endif
-                </p>
-                <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/screening") }}"
-                    class="block w-full text-center bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-600 hover:to-teal-500 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i> Screening
-                </a>
-            </div>
-        </div>
-        @endif
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">Screening</h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">Seleksi peserta</p>
+            </a>
+            @endif
 
-        <!-- Card 4: Screening Hafalan (Admin, Dosen, Prodi) -->
-        @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'prodi', 'kemahasiswaan']))
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-purple-500 to-purple-400 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-book-quran text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">Screening Hafalan</h3>
+            <!-- Menu 4: Screening Hafalan -->
+            @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'prodi', 'kemahasiswaan']))
+            <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/screening/hafalan") }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3 group-hover:bg-purple-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-book-quran text-xl md:text-2xl"></i>
                 </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    @if(auth()->user()->role == 'dosen')
-                    Penilaian hafalan mahasiswa bimbingan.
-                    @elseif(auth()->user()->role == 'prodi')
-                    Penilaian hafalan mahasiswa prodi Anda.
-                    @else
-                    Kelola penilaian hafalan Al-Qur'an peserta KKN.
-                    @endif
-                </p>
-                <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/screening/hafalan") }}"
-                    class="block w-full text-center bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i> Kelola Hafalan
-                </a>
-            </div>
-        </div>
-        @endif
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">Hafalan</h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">Penilaian hafalan</p>
+            </a>
+            @endif
 
-        <!-- Card 5: Laporan Harian / Laporan Mahasiswa (Semua Role) -->
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-orange-500 to-orange-400 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-file-alt text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">
-                        @if(auth()->user()->role == 'mahasiswa') Laporan Harian
-                        @else Laporan Mahasiswa
-                        @endif
-                    </h3>
+            <!-- Menu 5: Laporan Harian -->
+            <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/laporan-harian") }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3 group-hover:bg-orange-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-file-alt text-xl md:text-2xl"></i>
                 </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    @if(auth()->user()->role == 'mahasiswa')
-                    Buat dan kirim laporan harian kegiatan KKN Anda.
-                    @elseif(auth()->user()->role == 'dosen')
-                    Review laporan harian mahasiswa bimbingan Anda.
-                    @elseif(auth()->user()->role == 'prodi')
-                    Review laporan harian mahasiswa prodi Anda.
-                    @else
-                    Review laporan harian seluruh mahasiswa KKN.
-                    @endif
-                </p>
-                <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/laporan-harian") }}"
-                    class="block w-full text-center bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i>
-                    @if(auth()->user()->role == 'mahasiswa') Buat Laporan
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">
+                    @if(auth()->user()->role == 'mahasiswa') Laporan Saya
                     @else Review Laporan
                     @endif
-                </a>
-            </div>
-        </div>
-
-        <!-- Card 6: Dokumen / Dokumen Saya (Mahasiswa & Admin) -->
-        @if(in_array(auth()->user()->role, ['superadmin', 'mahasiswa']))
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-indigo-600 to-indigo-500 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-folder-open text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">
-                        @if(auth()->user()->role == 'mahasiswa') Dokumen Saya
-                        @else Dokumen KKN
-                        @endif
-                    </h3>
-                </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    @if(auth()->user()->role == 'mahasiswa')
-                    Kelola dokumen persyaratan KKN Anda.
-                    @else
-                    Kelola dokumen persyaratan seluruh mahasiswa KKN.
+                </h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">
+                    @if(auth()->user()->role == 'mahasiswa') Buat laporan
+                    @else Review mahasiswa
                     @endif
                 </p>
-                <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/dokumen") }}"
-                    class="block w-full text-center bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i> Kelola Dokumen
-                </a>
-            </div>
-        </div>
-        @endif
+            </a>
 
-        <!-- Card 7: Pendaftaran KKN (Mahasiswa & Admin) -->
-        @if(in_array(auth()->user()->role, ['superadmin', 'mahasiswa']))
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-teal-600 to-teal-500 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-edit text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">
-                        @if(auth()->user()->role == 'mahasiswa') Pendaftaran KKN
-                        @else Manajemen Pendaftaran
-                        @endif
-                    </h3>
+            <!-- Menu 6: Dokumen -->
+            @if(in_array(auth()->user()->role, ['superadmin', 'mahasiswa']))
+            <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/dokumen") }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3 group-hover:bg-indigo-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-folder-open text-xl md:text-2xl"></i>
                 </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    @if(auth()->user()->role == 'mahasiswa')
-                    Daftarkan diri Anda untuk mengikuti program KKN.
-                    @else
-                    Kelola pendaftaran mahasiswa peserta KKN.
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">
+                    @if(auth()->user()->role == 'mahasiswa') Dokumen Saya
+                    @else Dokumen
                     @endif
-                </p>
-                <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/pendaftaran") }}"
-                    class="block w-full text-center bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i>
+                </h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">Kelola berkas</p>
+            </a>
+            @endif
+
+            <!-- Menu 7: Pendaftaran -->
+            @if(in_array(auth()->user()->role, ['superadmin', 'mahasiswa']))
+            <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/pendaftaran") }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-green-100 text-green-600 flex items-center justify-center mb-3 group-hover:bg-green-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-edit text-xl md:text-2xl"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">
+                    @if(auth()->user()->role == 'mahasiswa') Pendaftaran
+                    @else Manajemen
+                    @endif
+                </h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">
                     @if(auth()->user()->role == 'mahasiswa') Daftar KKN
-                    @else Kelola Pendaftaran
-                    @endif
-                </a>
-            </div>
-        </div>
-        @endif
-
-        <!-- Card 8: Rekap Laporan (Semua Role) -->
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-green-500 to-green-400 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-chart-bar text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">Rekap Laporan</h3>
-                </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    @if(auth()->user()->role == 'mahasiswa')
-                    Lihat rekap laporan harian yang telah Anda buat.
-                    @elseif(auth()->user()->role == 'dosen')
-                    Lihat rekap laporan mahasiswa bimbingan Anda.
-                    @elseif(auth()->user()->role == 'prodi')
-                    Lihat rekap laporan mahasiswa prodi Anda.
-                    @else
-                    Lihat rekap laporan seluruh mahasiswa KKN.
+                    @else Kelola pendaftaran
                     @endif
                 </p>
-                <a href="#"
-                    class="block w-full text-center bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i> Lihat Rekap
-                </a>
-            </div>
-        </div>
+            </a>
+            @endif
 
-        <!-- Card 9: Score / Nilai (Admin, Dosen, Prodi) -->
-        @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'prodi', 'kemahasiswaan']))
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-yellow-500 to-yellow-400 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-star text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">Score / Nilai</h3>
+            <!-- Menu 8: Rekap Laporan -->
+            <a href="{{ route('kegiatan.rekap-laporan.index', ['role' => auth()->user()->role, 'jenisKegiatan' => $jenisKegiatan]) }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-green-100 text-green-600 flex items-center justify-center mb-3 group-hover:bg-green-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-chart-bar text-xl md:text-2xl"></i>
                 </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    @if(auth()->user()->role == 'dosen')
-                    Kelola penilaian mahasiswa bimbingan Anda.
-                    @elseif(auth()->user()->role == 'prodi')
-                    Kelola penilaian mahasiswa prodi Anda.
-                    @else
-                    Kelola penilaian akhir seluruh mahasiswa KKN.
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">Rekap Laporan</h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">Lihat statistik</p>
+            </a>
+
+            <!-- Menu 9: Score / Nilai -->
+            @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'prodi', 'kemahasiswaan']))
+            <a href="#" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center mb-3 group-hover:bg-yellow-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-star text-xl md:text-2xl"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">Score / Nilai</h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">Kelola nilai</p>
+            </a>
+            @else
+
+            <!-- Menu 10: Kesehatan -->
+            <a href="#" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-red-100 text-red-600 flex items-center justify-center mb-3 group-hover:bg-red-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-heartbeat text-xl md:text-2xl"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">Kesehatan</h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">
+                    @if(auth()->user()->role == 'mahasiswa') Input data
+                    @else Pantau
                     @endif
                 </p>
-                <a href="#"
-                    class="block w-full text-center bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i> Kelola Nilai
-                </a>
-            </div>
-        </div>
-        @endif
+            </a>
+            @endif
 
-        <!-- Card 10: Kesehatan Mahasiswa (Semua Role) -->
-        <div class="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div class="bg-gradient-to-r from-red-500 to-red-400 p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <i class="fas fa-heartbeat text-white text-lg"></i>
-                    </div>
-                    <h3 class="text-white font-semibold text-lg">Kesehatan Mahasiswa</h3>
+            <!-- Menu 11: Dokumen Kelompok -->
+            <a href="{{ route('kegiatan.berkas.index', ['role' => $role, 'jenisKegiatan' => $jenisKegiatan]) }}" 
+               wire:navigate
+               class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 p-4 active:scale-95 hover:scale-105">
+                <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-3 group-hover:bg-pink-600 group-hover:text-white transition mx-auto md:mx-0">
+                    <i class="fas fa-file-pdf text-xl md:text-2xl"></i>
                 </div>
-            </div>
-            <div class="p-5">
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">
-                    @if(auth()->user()->role == 'mahasiswa')
-                    Input dan pantau data kesehatan Anda selama KKN.
-                    @elseif(auth()->user()->role == 'dosen')
-                    Pantau data kesehatan mahasiswa bimbingan Anda.
-                    @elseif(auth()->user()->role == 'prodi')
-                    Pantau data kesehatan mahasiswa prodi Anda.
-                    @else
-                    Pantau data kesehatan seluruh mahasiswa peserta KKN.
-                    @endif
-                </p>
-                <a href="#"
-                    class="block w-full text-center bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-500 text-white font-medium py-2.5 rounded-full transition-all duration-200 hover:scale-105"
-                    wire:navigate>
-                    <i class="fas fa-arrow-right mr-2"></i>
-                    @if(auth()->user()->role == 'mahasiswa') Kelola Kesehatan
-                    @else Pantau Kesehatan
-                    @endif
-                </a>
-            </div>
+                <h3 class="font-semibold text-gray-800 text-sm md:text-base text-center md:text-left">Dokumen Kelompok</h3>
+                <p class="text-xs text-gray-400 mt-1 text-center md:text-left hidden md:block">Berkas kelompok</p>
+            </a>
         </div>
-
     </div>
 </div>
+
+@push('style')
+<style>
+    /* Touch-friendly untuk mobile */
+    @media (max-width: 768px) {
+        .group {
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .active\:scale-95:active {
+            transform: scale(0.95);
+        }
+    }
+    
+    /* Hover effect untuk desktop */
+    @media (min-width: 769px) {
+        .hover\:scale-105:hover {
+            transform: scale(1.05);
+        }
+    }
+    
+    /* Smooth transition */
+    .group {
+        transition: all 0.2s ease;
+    }
+</style>
+@endpush

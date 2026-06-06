@@ -45,15 +45,16 @@
                     <h3 class="text-lg font-semibold text-gray-800">Anggota Kelompok</h3>
                     <p class="text-xs text-gray-500">Daftar mahasiswa yang tergabung dalam kelompok ini</p>
                 </div>
-            </div><a href="{{ route('kegiatan.kelompok.tambah-anggota', [
-    'role' => $role, 
-    'jenisKegiatan' => $jenisKegiatan, 
-    'kelompokID' => $kelompok->id
-]) }}"
-   wire:navigate 
-   class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white rounded-full text-sm font-medium transition">
-    <i class="fas fa-plus-circle"></i> Tambah Anggota
-</a>
+            </div>
+            <a href="{{ route('kegiatan.kelompok.tambah-anggota', [
+                'role' => $role, 
+                'jenisKegiatan' => $jenisKegiatan, 
+                'kelompokID' => $kelompok->id
+            ]) }}"
+               wire:navigate 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white rounded-full text-sm font-medium transition">
+                <i class="fas fa-plus-circle"></i> Tambah Anggota
+            </a>
         </div>
 
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -131,12 +132,12 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <i class="fas fa-graduation-cap text-blue-500"></i>
-                    <span class="text-lg font-bold text-gray-800">{{ $prodiCount ?? $anggota->groupBy('prodi_id')->count() }}</span>
+                    <span class="text-lg font-bold text-gray-800">{{ $prodiCount }}</span>
                     <span class="text-xs text-gray-500">Program Studi</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <i class="fas fa-chart-line text-blue-500"></i>
-                    <span class="text-lg font-bold text-gray-800">{{ $rataSemester ?? round($anggota->avg('semester'), 1) }}</span>
+                    <span class="text-lg font-bold text-gray-800">{{ $rataSemester }}</span>
                     <span class="text-xs text-gray-500">Rata-rata Semester</span>
                 </div>
             </div>
@@ -183,19 +184,20 @@
                                     <div class="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
                                         <i class="fas fa-user-tie text-sm"></i>
                                     </div>
-                                    <span class="font-medium text-gray-800">{{ $member->user->first_name ?? '-' }}</span>
+                                    <span class="font-medium text-gray-800">{{ $member->user->name ?? $member->user->first_name ?? '-' }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-600">{{ $member->user->email ?? '-' }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-                                    {{ $member->role == 'dosen_pembimbing' ? 'bg-blue-100 text-blue-700' : '' }}
+                                    {{ $member->role == 'dospem' ? 'bg-blue-100 text-blue-700' : '' }}
                                     {{ $member->role == 'ketua' ? 'bg-yellow-100 text-yellow-700' : '' }}
-                                    {{ $member->role == 'anggota' ? 'bg-sky-100 text-sky-700' : '' }}">
-                                    <i class="fas {{ $member->role == 'dosen_pembimbing' ? 'fa-chalkboard-user' : ($member->role == 'ketua' ? 'fa-crown' : 'fa-user') }}"></i>
+                                    {{ $member->role == 'tim' ? 'bg-sky-100 text-sky-700' : '' }}
+                                    {{ $member->role == 'korlap' ? 'bg-purple-100 text-purple-700' : '' }}">
+                                    <i class="fas {{ $member->role == 'dospem' ? 'fa-chalkboard-user' : ($member->role == 'ketua' ? 'fa-crown' : 'fa-user') }}"></i>
                                     {{ ucfirst(str_replace('_', ' ', $member->role ?? 'Anggota')) }}
                                 </span>
-                            </td>
+                            <td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex gap-2 justify-center">
                                     <button wire:click="viewTim({{ $member->id }})" 
@@ -244,7 +246,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <i class="fas fa-chalkboard-user text-blue-500"></i>
-                    <span class="text-lg font-bold text-gray-800">{{ $tim->where('role', 'dosen_pembimbing')->count() }}</span>
+                    <span class="text-lg font-bold text-gray-800">{{ $tim->where('role', 'dospem')->count() }}</span>
                     <span class="text-xs text-gray-500">Dosen Pembimbing</span>
                 </div>
                 <div class="flex items-center gap-2">
@@ -254,8 +256,13 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <i class="fas fa-user text-blue-500"></i>
-                    <span class="text-lg font-bold text-gray-800">{{ $tim->where('role', 'anggota')->count() }}</span>
+                    <span class="text-lg font-bold text-gray-800">{{ $tim->where('role', 'tim')->count() }}</span>
                     <span class="text-xs text-gray-500">Anggota Tim</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-handshake text-purple-500"></i>
+                    <span class="text-lg font-bold text-gray-800">{{ $tim->where('role', 'korlap')->count() }}</span>
+                    <span class="text-xs text-gray-500">Koordinator Lapangan</span>
                 </div>
             </div>
             @endif
@@ -274,8 +281,12 @@
                             <i class="fas fa-user-plus text-white"></i>
                         </div>
                         <div>
-                            <h5 class="text-white font-semibold">Tambah Tim ke Kelompok</h5>
-                            <p class="text-white/80 text-xs">Tambahkan dosen pembimbing atau pengurus kelompok</p>
+                            <h5 class="text-white font-semibold">
+                                {{ $isEditingTim ? 'Edit Tim' : 'Tambah Tim ke Kelompok' }}
+                            </h5>
+                            <p class="text-white/80 text-xs">
+                                {{ $isEditingTim ? 'Ubah data tim' : 'Tambahkan dosen pembimbing atau pengurus kelompok' }}
+                            </p>
                         </div>
                     </div>
                     <button type="button" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition" wire:click="closeTimModal">
@@ -297,7 +308,7 @@
                                 <option value="">Pilih User</option>
                                 @foreach($availableUsers as $user)
                                 <option value="{{ $user->id }}">
-                                    {{ $user->first_name }} - {{ $user->email }} ({{ ucfirst($user->role) }})
+                                    {{ $user->first_name ?? $user->name }} - {{ $user->email }} ({{ ucfirst($user->role) }})
                                 </option>
                                 @endforeach
                             </select>
@@ -314,15 +325,17 @@
                         </label>
                         <div class="relative">
                             <i class="fas fa-briefcase absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <select wire:model="role" 
+                            <select wire:model="role_tim" 
                                     class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="">Pilih Role</option>
                                 <option value="dospem">Dosen Pembimbing</option>
+                                <option value="mitra">Mitra</option>
+                                <option value="ketua">Ketua Kelompok</option>
                                 <option value="tim">Anggota Tim</option>
                                 <option value="korlap">Koordinator Lapangan</option>
                             </select>
                         </div>
-                        @error('role')
+                        @error('role_tim')
                         <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
                         @enderror
                     </div>
@@ -349,8 +362,13 @@
                         <i class="fas fa-times mr-1"></i> Batal
                     </button>
                     <button type="button" class="px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white rounded-full text-sm font-medium transition" wire:click="saveTim" wire:loading.attr="disabled">
-                        <span wire:loading.remove><i class="fas fa-save mr-1"></i> Simpan</span>
-                        <span wire:loading><i class="fas fa-spinner fa-pulse mr-1"></i> Menyimpan...</span>
+                        <span wire:loading.remove>
+                            <i class="fas fa-save mr-1"></i> 
+                            {{ $isEditingTim ? 'Update' : 'Simpan' }}
+                        </span>
+                        <span wire:loading>
+                            <i class="fas fa-spinner fa-pulse mr-1"></i> Menyimpan...
+                        </span>
                     </button>
                 </div>
             </div>
