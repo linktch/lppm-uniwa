@@ -4,6 +4,8 @@ namespace App\Livewire\Laporanharian;
 
 use App\Models\KelompokUser;
 use App\Models\LaporanHarian;
+use App\Models\Sertifikat;
+use App\Models\TimelineKegiatan;
 use App\Services\KegiatanService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +32,14 @@ class Create extends Component
     public $isEditing = false;
     public $laporanId;
 
+    // Timeline & Sertifikat
+    public $timelineAktif = null;
+    public $canCreateLaporan = false;
+    public $timelineMessage = '';
+    public $sisaHari = 0;
+    public $hasSertifikat = false;
+    public $sertifikatMessage = '';
+
     // Auto-save key
     protected $autoSaveKey = 'laporan_harian_draft';
 
@@ -39,6 +49,19 @@ class Create extends Component
         $this->jenisKegiatan = $jenisKegiatan;
         $this->periode_id = KegiatanService::getPeriodeId();
         $this->kegiatan_id = KegiatanService::getKegiatanId($jenisKegiatan);
+
+        // Cek timeline dan sertifikat
+        $this->checkTimeline();
+        $this->checkSertifikat();
+
+        // Jika tidak bisa membuat laporan, redirect
+        if (!$this->canCreateLaporan && !$id) {
+            session()->flash('error', $this->timelineMessage);
+            return redirect()->route('kegiatan.laporanharian.index', [
+                'role' => $this->role,
+                'jenisKegiatan' => $this->jenisKegiatan
+            ]);
+        }
 
         // Ambil kelompok user
         $kelompokUser = KelompokUser::where('user_id', Auth::id())
@@ -61,6 +84,71 @@ class Create extends Component
         }
     }
 
+    /**
+     * Cek timeline pelaksanaan
+     */
+    public function checkTimeline()
+    {
+        // Ambil timeline dengan status AKTIF dan jenis = 'Pelaksanaan' untuk kegiatan ini
+        $this->timelineAktif = TimelineKegiatan::where('status', 'AKTIF')
+            ->where('jenis', 'Pelaksanaan')
+            ->where('kegiatan_id', $this->kegiatan_id)
+            ->first();
+
+        if ($this->timelineAktif) {
+            $today = Carbon::now();
+            $tglMulai = Carbon::parse($this->timelineAktif->tanggal_mulai);
+            $tglSelesai = Carbon::parse($this->timelineAktif->tanggal_selesai);
+
+            if ($today->between($tglMulai, $tglSelesai)) {
+                $this->canCreateLaporan = true;
+                $this->sisaHari = $today->diffInDays($tglSelesai);
+                $this->timelineMessage = sprintf(
+                    '✅ Periode pelaksanaan %s sedang berlangsung (%s - %s)',
+                    $this->jenisKegiatan,
+                    $tglMulai->format('d/m/Y'),
+                    $tglSelesai->format('d/m/Y')
+                );
+            } elseif ($today->lt($tglMulai)) {
+                $this->canCreateLaporan = false;
+                $this->timelineMessage = sprintf(
+                    '⏳ Periode pelaksanaan %s belum dimulai. Akan dimulai pada %s.',
+                    $this->jenisKegiatan,
+                    $tglMulai->format('d/m/Y')
+                );
+            } else {
+                $this->canCreateLaporan = false;
+                $this->timelineMessage = sprintf(
+                    '❌ Periode pelaksanaan %s telah berakhir (selesai pada %s).',
+                    $this->jenisKegiatan,
+                    $tglSelesai->format('d/m/Y')
+                );
+            }
+        } else {
+            $this->canCreateLaporan = false;
+            $this->timelineMessage = "Tanggal periode pelaksanaan {$this->jenisKegiatan} belum ditentukan";
+        }
+    }
+
+    /**
+     * Cek apakah user sudah memiliki sertifikat
+     */
+    public function checkSertifikat()
+    {
+        $sertifikat = Sertifikat::where('user_id', Auth::id())
+            ->where('periode_id', $this->periode_id)
+            ->where('kegiatan_id', $this->kegiatan_id)
+            ->first();
+
+        if ($sertifikat) {
+            $this->hasSertifikat = true;
+            $this->sertifikatMessage = '✅ Sertifikat sudah tersedia.';
+        } else {
+            $this->hasSertifikat = false;
+            $this->sertifikatMessage = '⚠️ Sertifikat belum tersedia. Pastikan semua penilaian sudah selesai.';
+        }
+    }
+
     public function loadLaporan()
     {
         $laporan = LaporanHarian::where('id', $this->laporanId)
@@ -73,20 +161,25 @@ class Create extends Component
         $this->oldFoto = $laporan->foto;
     }
 
-    public function updateTanggal()
-    {
-        // Method untuk update tanggal (dipanggil saat tanggal berubah)
-    }
-
     public function saveLaporan()
     {
-        // Di method saveLaporan()
+        // Validasi timeline dan sertifikat sebelum save
+        $this->checkTimeline();
+        $this->checkSertifikat();
+
+        if (!$this->canCreateLaporan) {
+            session()->flash('error', $this->timelineMessage);
+            return redirect()->route('kegiatan.laporanharian.index', [
+                'role' => $this->role,
+                'jenisKegiatan' => $this->jenisKegiatan
+            ]);
+        }
+
         $this->validate([
             'tanggal' => 'required|date',
             'jam' => 'required',
             'narasi' => 'required|min:500',
             'foto' => $this->isEditing ? 'nullable|image|mimes:jpg,jpeg,png|max:1024' : 'required|image|mimes:jpg,jpeg,png|max:1024',
-            // max:1024 = 1MB
         ], [
             'tanggal.required' => 'Tanggal wajib diisi',
             'jam.required' => 'Jam wajib diisi',
@@ -117,7 +210,7 @@ class Create extends Component
                     'aktivitas' => $this->narasi,
                     'foto' => $fotoPath,
                 ]);
-                $message = 'Laporan berhasil diupdate';
+                $message = '✅ Laporan berhasil diupdate';
             } else {
                 LaporanHarian::create([
                     'user_id' => Auth::id(),
@@ -130,7 +223,7 @@ class Create extends Component
                     'foto' => $fotoPath,
                     'status' => 'submitted',
                 ]);
-                $message = 'Laporan berhasil disimpan';
+                $message = '✅ Laporan berhasil disimpan';
             }
 
             // Hapus auto-save setelah berhasil
@@ -165,6 +258,12 @@ class Create extends Component
 
     public function render()
     {
-        return view('livewire.laporanharian.create');
+        return view('livewire.laporanharian.create', [
+            'canCreateLaporan' => $this->canCreateLaporan,
+            'timelineMessage' => $this->timelineMessage,
+            'sisaHari' => $this->sisaHari,
+            'hasSertifikat' => $this->hasSertifikat,
+            'sertifikatMessage' => $this->sertifikatMessage,
+        ]);
     }
 }

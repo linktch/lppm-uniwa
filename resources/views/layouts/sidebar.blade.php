@@ -10,16 +10,17 @@ $kegiatanActive = request()->is("$role/kegiatan/*") ?? false;
        style="background: linear-gradient(180deg, #1a3a5c 0%, #0f2b45 100%);">
     
     <!-- Brand Logo -->
-    <a href="{{ route('superadmin.user.index') }}" 
-       class="flex items-center gap-3 px-4 py-4 border-b border-white/10">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg"
-             style="background: linear-gradient(135deg, #2c7da0, #1e3a5f);">
-            <i class="fas fa-graduation-cap text-white text-sm"></i>
-        </div>
-        <span class="font-bold text-base tracking-wide text-white">
-            LPPM <span style="color: #6ab0d6;">Uniwa</span>
-        </span>
-    </a>
+   <a href="{{ route('dashboard') }}" 
+   wire:navigate
+   class="flex items-center gap-3 px-4 py-4 border-b border-white/10">
+    <div class="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg"
+         style="background: linear-gradient(135deg, #2c7da0, #1e3a5f);">
+        <i class="fas fa-graduation-cap text-white text-sm"></i>
+    </div>
+    <span class="font-bold text-base tracking-wide text-white">
+        LPPM <span style="color: #6ab0d6;">Uniwa</span>
+    </span>
+</a>
 
     <!-- Sidebar Content -->
     <div class="flex-1 flex flex-col py-4 px-3">
@@ -52,7 +53,8 @@ $kegiatanActive = request()->is("$role/kegiatan/*") ?? false;
                 
                 <!-- Dashboard -->
                 <li>
-                    <a href="#" 
+                     <a href="{{ route('dashboard') }}" 
+   wire:navigate
                        class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 {{ request()->is('dashboard*') ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/5 hover:text-white' }}">
                         <i class="fas fa-tachometer-alt w-5"></i>
                         <span class="text-sm">Dashboard</span>

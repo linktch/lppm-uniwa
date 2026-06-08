@@ -25,8 +25,26 @@ class Kegiatan extends Model
         return $this->hasMany(IndikatorPencapaian::class, 'kegiatan_id');
     }
 
-        public function answers()
+    public function answers()
     {
         return $this->hasMany(ScreeningAnswer::class, 'kegiatan_id');
+    }
+
+    // 🔗 LAPORAN HARIAN
+    public function laporanHarian()
+    {
+        return $this->hasMany(LaporanHarian::class, 'kegiatan_id');
+    }
+
+    // 🔗 KELOMPOK
+    public function kelompok()
+    {
+        return $this->hasMany(Kelompok::class, 'kegiatan_id');
+    }
+
+    // 🔗 SERTIFIKAT
+    public function sertifikat()
+    {
+        return $this->hasMany(Sertifikat::class, 'kegiatan_id');
     }
 }
