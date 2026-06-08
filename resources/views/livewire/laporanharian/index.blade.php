@@ -14,21 +14,37 @@
         </div>
     </div>
 
-    <!-- Timeline Info Card -->
+    <!-- Status Bar: Sertifikat (Kiri) + Timeline (Kanan) -->
     <div class="mx-4 mt-4">
-        <div class="rounded-xl p-4 flex items-start gap-3 shadow-sm {{ $canCreateLaporan ? 'bg-green-50 border-l-4 border-green-500' : 'bg-yellow-50 border-l-4 border-yellow-500' }}">
-            <i class="fas fa-calendar-alt text-xl text-blue-500 mt-0.5"></i>
-            <div class="flex-1">
-                <p class="font-semibold text-gray-800 text-sm">Informasi Timeline Pelaksanaan</p>
-                <p class="text-xs text-gray-600 mt-0.5">{{ $timelineMessage }}</p>
-                @if($canCreateLaporan && $sisaHari > 0)
-                <div class="mt-2">
-                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-green-500 h-1.5 rounded-full" style="width: 100%"></div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1.5">
-                        <i class="fas fa-hourglass-half mr-1"></i> Sisa waktu: {{ $sisaHari }} hari
-                    </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            
+            <!-- Kiri: Status Sertifikat -->
+            @if(auth()->user()->role == 'mahasiswa')
+                @if(!$hasSertifikat)
+                <div class="bg-red-100 rounded-xl p-3 flex items-center gap-2 border-l-4 border-red-500">
+                    <i class="fas fa-certificate text-red-500"></i>
+                    <span class="text-xs text-red-700">Sertifikat: Belum tersedia</span>
+                </div>
+                @else
+                <div class="bg-green-100 rounded-xl p-3 flex items-center gap-2 border-l-4 border-green-500">
+                    <i class="fas fa-check-circle text-green-500"></i>
+                    <span class="text-xs text-green-700">Sertifikat: Tersedia ✓</span>
+                </div>
+                @endif
+            @endif
+
+            <!-- Kanan: Info Timeline -->
+            <div class="{{ $canCreateLaporan && $hasSertifikat ? 'bg-green-50 border-l-4 border-green-500' : 'bg-yellow-50 border-l-4 border-yellow-500' }} rounded-xl p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-calendar-alt text-blue-500"></i>
+                    <span class="text-xs font-medium text-gray-700">
+                        {{ $timelineMessage }}
+                    </span>
+                </div>
+                @if($canCreateLaporan && $hasSertifikat && $sisaHari > 0)
+                <div class="flex items-center gap-1">
+                    <i class="fas fa-hourglass-half text-gray-500 text-xs"></i>
+                    <span class="text-xs font-semibold text-gray-700">{{ round($sisaHari) }} hari</span>
                 </div>
                 @endif
             </div>
@@ -38,7 +54,6 @@
     <!-- Filter Section -->
     <div class="bg-white rounded-xl shadow-sm mx-4 mt-4 overflow-hidden">
         <div class="p-4 space-y-3">
-            <!-- Row 1: Periode & Tombol Tambah -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <div class="flex-1">
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Periode</label>
@@ -50,26 +65,23 @@
                     </select>
                 </div>
                 <div class="sm:w-40 flex items-end">
-                    @if($canCreateLaporan)
-                    <a href="{{ route('kegiatan.laporanharian.create', ['role' => $role, 'jenisKegiatan' => $jenisKegiatan]) }}" 
-                       wire:navigate 
-                       class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition text-center">
-                        <i class="fas fa-plus mr-2"></i>Tambah
-                    </a>
-                    @else
-                    <div class="relative w-full group">
-                        <button disabled class="w-full bg-blue-600 opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
+                    @if(auth()->user()->role == 'mahasiswa')
+                        @if($canCreateLaporan && $hasSertifikat)
+                        <a href="{{ route('kegiatan.laporanharian.create', ['role' => $role, 'jenisKegiatan' => $jenisKegiatan]) }}" 
+                           wire:navigate 
+                           class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition text-center">
+                            <i class="fas fa-plus mr-2"></i>Tambah
+                        </a>
+                        @else
+                        <button disabled class="w-full bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
                             <i class="fas fa-plus mr-2"></i>Tambah
                         </button>
-                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
-                            {{ $timelineMessage }}
-                        </div>
-                    </div>
+                        @endif
                     @endif
                 </div>
             </div>
 
-            <!-- Row 2: Filter Prodi & Search (hanya untuk role tertentu) -->
+            <!-- Filter untuk admin -->
             @if(in_array(auth()->user()->role, ['superadmin', 'dosen', 'kemahasiswaan']))
             <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -91,7 +103,7 @@
         </div>
     </div>
 
-    <!-- List Laporan (Card-based untuk mobile) -->
+    <!-- List Laporan -->
     <div class="px-4 mt-4 space-y-3">
         @forelse($laporans as $index => $laporan)
         @php
@@ -109,7 +121,6 @@
         @endphp
         
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <!-- Header Card -->
             <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -125,7 +136,6 @@
                 </span>
             </div>
             
-            <!-- Body Card -->
             <div class="px-4 py-3 space-y-2">
                 <div class="flex items-center gap-2 text-sm">
                     <i class="fas fa-calendar-alt text-gray-400 w-4"></i>
@@ -137,7 +147,6 @@
                 </div>
             </div>
             
-            <!-- Footer Card (Aksi) -->
             <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex gap-3">
                 <button wire:click="view({{ $laporan->id }})"
                         class="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm transition">
@@ -150,7 +159,6 @@
                     <i class="fas fa-edit"></i> Edit
                 </button>
                 @endif
-                
             </div>
         </div>
         @empty

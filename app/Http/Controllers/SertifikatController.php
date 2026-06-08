@@ -14,10 +14,11 @@ use Illuminate\Http\Request;
 
 class SertifikatController extends Controller
 {
-    public function preview(Request $request, $role, $mahasiswaId)
+    // PERBAIKI: tambah parameter $jenisKegiatan
+    public function preview(Request $request, $role, $jenisKegiatan, $mahasiswaId)
     {
         $periode_id = KKNService::periodeId();
-        $kegiatan_id = KKNService::kegiatanId('KKN');
+        $kegiatan_id = KKNService::kegiatanId($jenisKegiatan ?? 'KKN'); // Gunakan $jenisKegiatan
 
         // ========== CEK APAKAH USER SUDAH PUNYA SERTIFIKAT ==========
         $existingSertifikat = Sertifikat::where('user_id', $mahasiswaId)
@@ -26,21 +27,16 @@ class SertifikatController extends Controller
             ->first();
 
         if ($existingSertifikat) {
-            // Jika sudah ada, gunakan nomor sertifikat yang sudah ada
             $nomorSertifikat = $existingSertifikat->nomor_sertifikat;
             $isNewRecord = false;
         } else {
-            // ========== BUAT NOMOR URUT BARU ==========
-            // Cari nomor urut tertinggi untuk periode ini
             $lastSertifikat = Sertifikat::where('periode_id', $periode_id)
                 ->where('kegiatan_id', $kegiatan_id)
                 ->orderBy('id', 'desc')
                 ->first();
 
-            // Nomor urut dimulai dari 1
             $urutan = 1;
             if ($lastSertifikat) {
-                // Ambil nomor urut dari nomor_sertifikat terakhir
                 $lastNomor = explode('/', $lastSertifikat->nomor_sertifikat)[0];
                 $urutan = (int)$lastNomor + 1;
             }
@@ -65,10 +61,8 @@ class SertifikatController extends Controller
             ? $user->data_mahasiswa
             : json_decode($user->data_mahasiswa ?? '{}', true);
 
-        // Clean string function
         $cleanString = function ($str) {
-            if ($str === null)
-                return '-';
+            if ($str === null) return '-';
             $str = mb_convert_encoding($str, 'UTF-8', 'UTF-8');
             $str = htmlspecialchars_decode($str, ENT_QUOTES);
             return trim($str);
@@ -122,9 +116,7 @@ class SertifikatController extends Controller
 
         $predikat = $this->getPredikat($persentase);
 
-        // ========== AMBIL DATA KETUA PANITIA PELAKSANA ==========
         $ketuaPanitia = PejabatSignatur::where('jabatan', 'LIKE', '%Ketua Panitia%')->first();
-
         if (!$ketuaPanitia) {
             $ketuaPanitia = new \stdClass();
             $ketuaPanitia->nama = 'M. Zakaria Yahya, S.P.';
@@ -132,7 +124,6 @@ class SertifikatController extends Controller
             $ketuaPanitia->signatur_path = null;
         }
 
-        // ========== AMBIL DATA KAPRODI ==========
         $kaprodi = null;
         if ($prodiFakultasId) {
             $idProdi = ProdiFakultas::where('id_prodi', $prodiFakultasId)->value('id');
@@ -141,7 +132,6 @@ class SertifikatController extends Controller
                 ->first();
         }
 
-        // Jika tidak ditemukan berdasarkan prodi, cari yang tanpa prodi_fakultas_id (default/universal)
         if (!$kaprodi) {
             $kaprodi = PejabatSignatur::where(function ($query) {
                 $query->whereNull('prodi_fakultas_id')->orWhere('prodi_fakultas_id', 0);
@@ -152,7 +142,6 @@ class SertifikatController extends Controller
             ->first();
         }
 
-        // Jika masih tidak ditemukan, buat objek default
         if (!$kaprodi) {
             $kaprodi = new \stdClass();
             $kaprodi->nama = 'Dr. Hj. Fatimah Azzahra, M.Pd.';
@@ -190,7 +179,6 @@ class SertifikatController extends Controller
             ]
         ];
 
-        // ========== SIMPAN KE DATABASE JIKA BELUM ADA ==========
         if ($isNewRecord) {
             Sertifikat::create([
                 'user_id' => $mahasiswaId,
@@ -215,7 +203,6 @@ class SertifikatController extends Controller
             ]);
         }
 
-        // Jika ingin langsung download PDF
         if ($request->has('download')) {
             $pdf = Pdf::loadView('pdf.sertifikat-kkn', $data);
             $pdf->setPaper('A4', 'landscape');
@@ -225,77 +212,19 @@ class SertifikatController extends Controller
         return view('pdf.sertifikat-kkn', $data);
     }
 
-    // ========== FUNGSI UNTUK GET DATA SERTIFIKAT ==========
-    public function getSertifikatByUser($userId)
+    // Method download
+    public function download($role, $jenisKegiatan, $mahasiswaId)
     {
-        $sertifikat = Sertifikat::where('user_id', $userId)
-            ->with(['user', 'periode', 'kegiatan'])
-            ->first();
-        
-        if (!$sertifikat) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sertifikat tidak ditemukan'
-            ], 404);
-        }
-        
-        return response()->json([
-            'success' => true,
-            'data' => $sertifikat
-        ]);
-    }
-    
-    public function getAllSertifikat()
-    {
-        $sertifikats = Sertifikat::with(['user', 'periode', 'kegiatan'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $sertifikats
-        ]);
-    }
-    
-    public function downloadSertifikat($id)
-    {
-        $sertifikat = Sertifikat::findOrFail($id);
-        
-        $data = [
-            'univ_name' => 'UNIVERSITAS WAHIDIYAH',
-            'panitia' => 'PANITIA PELAKSANA KULIAH KERJA NYATA (KKN) TAHUN ' . $sertifikat->tahun,
-            'lokasi' => "KABUPATEN {$sertifikat->kabupaten}",
-            'nomor_sertifikat' => $sertifikat->nomor_sertifikat,
-            'nama_mahasiswa' => $sertifikat->nama_mahasiswa,
-            'nim' => $sertifikat->nim,
-            'prodi' => $sertifikat->prodi,
-            'kelompok' => $sertifikat->kelompok,
-            'kabupaten' => $sertifikat->kabupaten,
-            'provinsi' => $sertifikat->provinsi,
-            'tempat_tanggal' => 'Kediri, ' . $sertifikat->tanggal_terbit->format('d F Y'),
-            'tahun' => date('Y', strtotime($sertifikat->tanggal_terbit)),
-            'capaian_hafalan' => json_decode($sertifikat->capaian_hafalan, true),
-            'total_nilai' => $sertifikat->total_nilai,
-            'max_nilai' => count(json_decode($sertifikat->capaian_hafalan, true)) * 100,
-            'persentase' => $sertifikat->persentase,
-            'predikat' => $sertifikat->predikat,
-            'ketua_panitia' => json_decode($sertifikat->data_penanda_tangan, true)['ketua_panitia'] ?? [],
-            'kaprodi' => json_decode($sertifikat->data_penanda_tangan, true)['kaprodi'] ?? [],
-        ];
-        
-        $pdf = Pdf::loadView('pdf.sertifikat-kkn', $data);
-        $pdf->setPaper('A4', 'landscape');
-        return $pdf->download('sertifikat_kkn_' . $sertifikat->nim . '.pdf');
+        $request = new \Illuminate\Http\Request();
+        $request->merge(['download' => true]);
+        return $this->preview($request, $role, $jenisKegiatan, $mahasiswaId);
     }
 
     private function getPredikat($persentase)
     {
-        if ($persentase >= 90)
-            return 'Sangat Baik (A)';
-        if ($persentase >= 80)
-            return 'Baik (B)';
-        if ($persentase >= 70)
-            return 'Cukup (C)';
+        if ($persentase >= 90) return 'Sangat Baik (A)';
+        if ($persentase >= 80) return 'Baik (B)';
+        if ($persentase >= 70) return 'Cukup (C)';
         return 'Kurang (D)';
     }
 

@@ -19,7 +19,7 @@ class Update extends Component
     public $laporanId;
     public $laporan;
     public $role;
-    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
+    public $jenisKegiatan;
     public $tanggal;
     public $jam;
     public $aktivitas;
@@ -27,8 +27,15 @@ class Update extends Component
     public $oldFoto;
     public $status;
     public $reviews = [];
+    
+    // Batas waktu revisi
+    public $batasWaktuRevisi;
+    public $isExpired = false;
+    public $sisaJam = 0;
+    public $sisaMenit = 0;
+    public $canEdit = true;
 
-    public function mount($role, $jenisKegiatan, $id) // TAMBAHKAN PARAMETER jenisKegiatan
+    public function mount($role, $jenisKegiatan, $id)
     {
         $this->role = $role;
         $this->jenisKegiatan = $jenisKegiatan;
@@ -36,16 +43,46 @@ class Update extends Component
         $this->laporan = LaporanHarian::with(['user', 'kelompok'])
             ->findOrFail($id);
 
-        if ($this->laporan->status != 'revisi') {
-            session()->flash('error', 'Laporan tidak dalam status revisi');
-            return redirect()->back();
+        // Cek apakah user adalah pemilik laporan
+        $isOwner = (Auth::id() == $this->laporan->user_id);
+        
+        // Cek status revisi
+        $isRevisi = ($this->laporan->status == 'revisi');
+        
+        // Cek batas waktu revisi
+        $this->checkBatasWaktuRevisi();
+        
+        // 🔥 JIKA EXPIRED, LANGSUNG REDIRECT KE HALAMAN VIEW
+        if ($this->isExpired) {
+            session()->flash('error', '⚠️ Batas waktu revisi 24 jam telah berakhir. Anda tidak dapat merevisi laporan ini.');
+            return redirect()->route('kegiatan.laporanharian.view', [
+                'role' => $this->role,
+                'jenisKegiatan' => $this->jenisKegiatan,
+                'id' => $this->laporanId
+            ]);
         }
-
-        if (Auth::id() != $this->laporan->user_id) {
+        
+        // Jika bukan owner, redirect
+        if (!$isOwner) {
             session()->flash('error', 'Anda tidak memiliki akses untuk merevisi laporan ini');
-            return redirect()->back();
+            return redirect()->route('kegiatan.laporanharian.view', [
+                'role' => $this->role,
+                'jenisKegiatan' => $this->jenisKegiatan,
+                'id' => $this->laporanId
+            ]);
+        }
+        
+        // Jika status bukan revisi, redirect
+        if (!$isRevisi) {
+            session()->flash('error', 'Laporan tidak dalam status revisi');
+            return redirect()->route('kegiatan.laporanharian.view', [
+                'role' => $this->role,
+                'jenisKegiatan' => $this->jenisKegiatan,
+                'id' => $this->laporanId
+            ]);
         }
 
+        // Set data form (hanya jika belum expired)
         $this->tanggal = $this->laporan->tanggal ? Carbon::parse($this->laporan->tanggal)->format('Y-m-d') : '';
         $this->jam = $this->laporan->jam ?? date('H:i');
         $this->aktivitas = $this->laporan->aktivitas ?? '';
@@ -59,8 +96,53 @@ class Update extends Component
             ->get();
     }
 
+    /**
+     * Cek batas waktu revisi (24 jam setelah review terakhir)
+     */
+    public function checkBatasWaktuRevisi()
+    {
+        // Ambil review terakhir dengan status revisi
+        $lastReview = Review::where('laporan_id', $this->laporanId)
+            ->where('status', 'revisi')
+            ->latest()
+            ->first();
+
+        if ($lastReview && $lastReview->created_at) {
+            $batasWaktu = Carbon::parse($lastReview->created_at)->addHours(24);
+            $now = Carbon::now();
+            
+            $this->batasWaktuRevisi = $batasWaktu;
+            
+            if ($now->greaterThan($batasWaktu)) {
+                $this->isExpired = true;
+            } else {
+                $this->isExpired = false;
+                $diffInMinutes = $now->diffInMinutes($batasWaktu);
+                $this->sisaJam = floor($diffInMinutes / 60);
+                $this->sisaMenit = $diffInMinutes % 60;
+            }
+        } else {
+            // Jika tidak ada review, beri batas 24 jam dari sekarang
+            $batasWaktu = Carbon::now()->addHours(24);
+            $this->batasWaktuRevisi = $batasWaktu;
+            $this->isExpired = false;
+            $this->sisaJam = 24;
+            $this->sisaMenit = 0;
+        }
+    }
+
     public function updateLaporan()
     {
+        // VALIDASI EXPIRED (jaga-jaga)
+        if ($this->isExpired) {
+            session()->flash('error', '⚠️ Batas waktu revisi 24 jam telah berakhir.');
+            return redirect()->route('kegiatan.laporanharian.view', [
+                'role' => $this->role,
+                'jenisKegiatan' => $this->jenisKegiatan,
+                'id' => $this->laporanId
+            ]);
+        }
+
         $this->validate([
             'tanggal' => 'required|date',
             'jam' => 'required',
@@ -84,6 +166,7 @@ class Update extends Component
                 }
                 $fotoPath = $this->foto->store('laporan-harian', 'public');
             }
+            
             $dateTime = Carbon::parse($this->tanggal . ' ' . $this->jam);
             $this->laporan->update([
                 'tanggal' => $dateTime,
@@ -93,7 +176,7 @@ class Update extends Component
                 'status' => 'submitted',
             ]);
 
-            session()->flash('success', 'Laporan berhasil direvisi dan disubmit kembali');
+            session()->flash('success', '✅ Laporan berhasil direvisi dan disubmit kembali');
             return redirect()->route('kegiatan.laporanharian.view', [
                 'role' => $this->role,
                 'jenisKegiatan' => $this->jenisKegiatan,
@@ -128,6 +211,10 @@ class Update extends Component
         return view('livewire.laporanharian.update', [
             'role' => $this->role,
             'jenisKegiatan' => $this->jenisKegiatan,
+            'isExpired' => $this->isExpired,
+            'sisaJam' => $this->sisaJam,
+            'sisaMenit' => $this->sisaMenit,
+            'batasWaktuRevisi' => $this->batasWaktuRevisi,
         ]);
     }
 }

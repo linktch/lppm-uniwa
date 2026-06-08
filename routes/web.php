@@ -1,20 +1,22 @@
 <?php
 
+use App\Http\Controllers\SertifikatController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Berkas\{Index as BerkasIndex};
+use App\Livewire\Berkassaya\{Index as BerkasSaya};
 use App\Livewire\Dashboard\Index as Dashboard;
 use App\Livewire\Kegiatan\Index as KegiatanIndex;
 use App\Livewire\Kelompok\{Index as KelompokIndex, Detail as KelompokDetail, Add as KelompokAdd};
 use App\Livewire\Laporanharian\{Index as LaporanharianIndex, Create as LaporanharianCreate, View as LaporanharianView, Update as LaporanharianUpdate};
 use App\Livewire\Laporanrekap\{Index as LaporanRekapIndex};
 use App\Livewire\Pendaftaran\{Index as PendaftaranIndex};
+use App\Livewire\Profile\{Index as ProfileIndex};
 use App\Livewire\Screening\Hafalan\{Index as HafalanIndex, Penilaian as HafalanPenilaian, Detail as HafalanDetail};
 use App\Livewire\Screening\{Index as ScreeningIndex};
 use App\Livewire\Superadmin\Pejabat\Index as PejabatIndex;
 use App\Livewire\Superadmin\Periode\Index as PeriodeIndex;
 use App\Livewire\Superadmin\User\Index as UserIndex;
 use App\Livewire\Timeline\Index as TimelineIndex;
-use App\Livewire\Profile\{Index as ProfileIndex};
 use Gregwar\Captcha\CaptchaBuilder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -43,7 +45,7 @@ Route::middleware('guest')->group(function () {
  */
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
-        Route::get('/profile', ProfileIndex::class)->name('profile');
+    Route::get('/profile', ProfileIndex::class)->name('profile');
 
     Route::post('/logout', function () {
         Auth::logout();
@@ -151,6 +153,39 @@ Route::middleware('auth')->group(function () {
         'middleware' => ['auth']
     ], function () {
         Route::get('/', PendaftaranIndex::class)->name('index');
+    });
+
+    /*
+     * |--------------------------------------------------------------------------
+     * | Route untuk Berkas Saya
+     * |--------------------------------------------------------------------------
+     */
+    Route::group([
+        'prefix' => '{role}/kegiatan/{jenisKegiatan}/berkas-saya',
+        'as' => 'kegiatan.berkassaya.',
+        'where' => [
+            'role' => 'superadmin|dosen|prodi|mahasiswa|kemahasiswaan',
+            'jenisKegiatan' => 'KKN|PKM|PAM'
+        ],
+        'middleware' => ['auth']
+    ], function () {
+        Route::get('/', BerkasSaya::class)->name('index');
+    });
+
+    Route::group([
+        'prefix' => '{role}/kegiatan/{jenisKegiatan}/sertifikat',
+        'as' => 'kegiatan.sertifikat.',
+        'where' => [
+            'role' => 'superadmin|dosen|prodi|mahasiswa|kemahasiswaan',
+            'jenisKegiatan' => 'KKN|PKM|PAM'
+        ],
+        'middleware' => ['auth']
+    ], function () {
+        // Preview sertifikat (tampil di browser)
+        Route::get('/{mahasiswaId}', [SertifikatController::class, 'preview'])->name('preview');
+
+        // Download sertifikat PDF
+        Route::get('/{mahasiswaId}/download', [SertifikatController::class, 'download'])->name('download');
     });
 });
 

@@ -1,44 +1,91 @@
 <div>
     <div class="p-6">
         <div class="max-w-5xl mx-auto">
-            <!-- Header -->
-           <!-- Tombol Aksi -->
-<div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-    <div class="p-5">
-        <div class="flex justify-between items-center gap-3">
-            <!-- Bagian Kiri: Tombol Kembali -->
-            <button wire:click="back"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </button>
-            
-            <!-- Bagian Kanan: Tombol Aksi -->
-            <div class="flex gap-3">
-                @if(Auth::user()->role != 'mahasiswa')
-                    <button wire:click="toggleReviewForm"
-                            class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white rounded-lg text-sm font-medium transition">
-                        <i class="fas fa-star mr-1"></i> Review Laporan
-                    </button>
-                @endif
-                
-                @if(Auth::user()->role == 'mahasiswa' && $data['status'] == 'revisi')
-                    <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/laporan-harian/{$data['id']}/update") }}" 
-                       wire:navigate
-                       class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white rounded-lg text-sm font-medium transition">
-                        <i class="fas fa-undo mr-1"></i> Revisi Laporan
-                    </a>
-                @endif
+            <!-- Header Tombol Aksi -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                <div class="p-5">
+                    <div class="flex justify-between items-center gap-3">
+                        <button wire:click="back"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                        
+                        <div class="flex gap-3">
+                            @if(Auth::user()->role != 'mahasiswa')
+                                <button wire:click="toggleReviewForm"
+                                        class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white rounded-lg text-sm font-medium transition">
+                                    <i class="fas fa-star mr-1"></i> Review Laporan
+                                </button>
+                            @endif
+                            
+                            @if(Auth::user()->role == 'mahasiswa' && $data['status'] == 'revisi')
+                                @if(!$isExpired)
+                                <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/laporan-harian/{$data['id']}/update") }}" 
+                                   wire:navigate
+                                   class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white rounded-lg text-sm font-medium transition">
+                                    <i class="fas fa-undo mr-1"></i> Revisi Laporan
+                                </a>
+                                @else
+                                <button disabled
+                                        class="px-4 py-2 bg-gray-400 cursor-not-allowed text-white rounded-lg text-sm font-medium transition">
+                                    <i class="fas fa-clock mr-1"></i> Revisi Laporan (Terlambat)
+                                </button>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
+
+            <!-- NOTIFIKASI BATAS WAKTU REVISI (UNTUK MAHASISWA) -->
+            @if(Auth::user()->role == 'mahasiswa' && $data['status'] == 'revisi')
+                @if($isExpired)
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-5 rounded-xl mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-red-200 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-hourglass-end text-red-600 text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="font-semibold text-red-800 mb-1">⚠️ Batas Waktu Revisi Telah Berakhir!</h5>
+                            <p class="text-sm text-red-700">
+                                Anda tidak dapat merevisi laporan ini karena melewati batas waktu 24 jam.
+                            </p>
+                            <p class="text-xs text-red-600 mt-2">
+                                <i class="fas fa-clock mr-1"></i> Batas waktu revisi: 
+                                {{ \Carbon\Carbon::parse($batasWaktuRevisi)->format('d/m/Y H:i') }}
+                            </p>
+                            <p class="text-xs text-red-600 mt-1">
+                                <i class="fas fa-info-circle mr-1"></i> Silakan hubungi dosen pembimbing untuk informasi lebih lanjut.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                @else
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-5 rounded-xl mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-hourglass-half text-green-600 text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="font-semibold text-green-800 mb-1">⏰ Batas Waktu Revisi</h5>
+                            <p class="text-sm text-green-700">
+                                Anda memiliki waktu <strong>{{ $sisaJam }} jam {{ $sisaMenit }} menit</strong> lagi untuk merevisi laporan ini.
+                            </p>
+                            <p class="text-xs text-green-600 mt-2">
+                                <i class="fas fa-clock mr-1"></i> Batas waktu revisi: 
+                                {{ \Carbon\Carbon::parse($batasWaktuRevisi)->format('d/m/Y H:i') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            @endif
 
             <!-- Data Laporan -->
             <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                     <div class="flex items-center gap-3">
-                        <div
-                            class="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 flex items-center justify-center">
                             <i class="fas fa-info-circle text-white text-sm"></i>
                         </div>
                         <h5 class="font-semibold text-gray-800">Data Laporan</h5>
@@ -56,7 +103,8 @@
                         <div>
                             <p class="text-xs text-gray-400 uppercase tracking-wide">Mahasiswa</p>
                             <p class="text-sm font-semibold text-gray-800">
-                                {{ $data['mahasiswa']['nama_mahasiswa'] ?? '-' }}</p>
+                                {{ $data['mahasiswa']['nama_mahasiswa'] ?? '-' }}
+                            </p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-400 uppercase tracking-wide">NIM</p>
@@ -71,39 +119,38 @@
                             $statusText = '';
 
                             switch ($status) {
-                            case 'draft':
-                            $statusClass = 'bg-gray-100 text-gray-700';
-                            $statusIcon = 'fa-pen-fancy';
-                            $statusText = 'Draft';
-                            break;
-                            case 'submitted':
-                            $statusClass = 'bg-blue-100 text-blue-700';
-                            $statusIcon = 'fa-paper-plane';
-                            $statusText = 'Submitted';
-                            break;
-                            case 'revisi':
-                            $statusClass = 'bg-yellow-100 text-yellow-700';
-                            $statusIcon = 'fa-undo-alt';
-                            $statusText = 'Revisi';
-                            break;
-                            case 'approved':
-                            $statusClass = 'bg-green-100 text-green-700';
-                            $statusIcon = 'fa-check-circle';
-                            $statusText = 'Approved';
-                            break;
-                            case 'rejected':
-                            $statusClass = 'bg-red-100 text-red-700';
-                            $statusIcon = 'fa-times-circle';
-                            $statusText = 'Rejected';
-                            break;
-                            default:
-                            $statusClass = 'bg-gray-100 text-gray-700';
-                            $statusIcon = 'fa-pen-fancy';
-                            $statusText = ucfirst($status);
+                                case 'draft':
+                                    $statusClass = 'bg-gray-100 text-gray-700';
+                                    $statusIcon = 'fa-pen-fancy';
+                                    $statusText = 'Draft';
+                                    break;
+                                case 'submitted':
+                                    $statusClass = 'bg-blue-100 text-blue-700';
+                                    $statusIcon = 'fa-paper-plane';
+                                    $statusText = 'Submitted';
+                                    break;
+                                case 'revisi':
+                                    $statusClass = 'bg-yellow-100 text-yellow-700';
+                                    $statusIcon = 'fa-undo-alt';
+                                    $statusText = 'Revisi';
+                                    break;
+                                case 'approved':
+                                    $statusClass = 'bg-green-100 text-green-700';
+                                    $statusIcon = 'fa-check-circle';
+                                    $statusText = 'Approved';
+                                    break;
+                                case 'rejected':
+                                    $statusClass = 'bg-red-100 text-red-700';
+                                    $statusIcon = 'fa-times-circle';
+                                    $statusText = 'Rejected';
+                                    break;
+                                default:
+                                    $statusClass = 'bg-gray-100 text-gray-700';
+                                    $statusIcon = 'fa-pen-fancy';
+                                    $statusText = ucfirst($status);
                             }
                             @endphp
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full {{ $statusClass }}">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full {{ $statusClass }}">
                                 <i class="fas {{ $statusIcon }}"></i> {{ $statusText }}
                             </span>
                         </div>
@@ -137,7 +184,7 @@
                             </p>
                             <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 max-h-64 overflow-y-auto">
                                 <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-                                    {!! $data['aktivitas'] ?? '-'!!}
+                                    {!! nl2br(e($data['aktivitas'] ?? '-')) !!}
                                 </p>
                                 <p class="text-right text-xs text-gray-400 mt-2">
                                     <i class="fas fa-keyboard"></i> {{ strlen($data['aktivitas'] ?? '') }} karakter
@@ -153,57 +200,52 @@
             <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-white">
                     <div class="flex items-center gap-3">
-                        <div
-                            class="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 flex items-center justify-center">
                             <i class="fas fa-star text-white text-sm"></i>
                         </div>
                         <h5 class="font-semibold text-gray-800">Review Laporan</h5>
-                        <span
-                            class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">{{ $reviews->count() }}
-                            Review</span>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">{{ $reviews->count() }} Review</span>
                     </div>
                 </div>
                 <div class="p-6 space-y-4">
                     @foreach($reviews as $review)
                     <div class="bg-gray-50 rounded-xl p-5">
                         <!-- Header Review -->
-                        <div
-                            class="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-200">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-200">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white
-                        {{ $review->role == 'mitra' ? 'bg-gradient-to-r from-cyan-600 to-cyan-400' : '' }}
-                        {{ $review->role == 'prodi' ? 'bg-gradient-to-r from-blue-700 to-blue-500' : '' }}
-                        {{ $review->role == 'kemahasiswaan' ? 'bg-gradient-to-r from-orange-500 to-orange-400' : '' }}
-                        {{ $review->role == 'superadmin' ? 'bg-gradient-to-r from-red-600 to-red-500' : '' }}
-                        {{ $review->role == 'dosen' ? 'bg-gradient-to-r from-purple-600 to-purple-400' : '' }}
-                        {{ $review->role == 'admin' ? 'bg-gradient-to-r from-gray-600 to-gray-500' : '' }}
-                        {{ $review->role == 'mahasiswa' ? 'bg-gradient-to-r from-green-600 to-green-400' : '' }}">
+                                    {{ $review->role == 'mitra' ? 'bg-gradient-to-r from-cyan-600 to-cyan-400' : '' }}
+                                    {{ $review->role == 'prodi' ? 'bg-gradient-to-r from-blue-700 to-blue-500' : '' }}
+                                    {{ $review->role == 'kemahasiswaan' ? 'bg-gradient-to-r from-orange-500 to-orange-400' : '' }}
+                                    {{ $review->role == 'superadmin' ? 'bg-gradient-to-r from-red-600 to-red-500' : '' }}
+                                    {{ $review->role == 'dosen' ? 'bg-gradient-to-r from-purple-600 to-purple-400' : '' }}
+                                    {{ $review->role == 'admin' ? 'bg-gradient-to-r from-gray-600 to-gray-500' : '' }}
+                                    {{ $review->role == 'mahasiswa' ? 'bg-gradient-to-r from-green-600 to-green-400' : '' }}">
                                     <i class="fas 
-                            {{ $review->role == 'mitra' ? 'fa-handshake' : '' }}
-                            {{ $review->role == 'prodi' ? 'fa-university' : '' }}
-                            {{ $review->role == 'kemahasiswaan' ? 'fa-user-friends' : '' }}
-                            {{ $review->role == 'superadmin' ? 'fa-crown' : '' }}
-                            {{ $review->role == 'dosen' ? 'fa-chalkboard-user' : '' }}
-                            {{ $review->role == 'admin' ? 'fa-user-shield' : '' }}
-                            {{ $review->role == 'mahasiswa' ? 'fa-user-graduate' : '' }}"></i>
+                                        {{ $review->role == 'mitra' ? 'fa-handshake' : '' }}
+                                        {{ $review->role == 'prodi' ? 'fa-university' : '' }}
+                                        {{ $review->role == 'kemahasiswaan' ? 'fa-user-friends' : '' }}
+                                        {{ $review->role == 'superadmin' ? 'fa-crown' : '' }}
+                                        {{ $review->role == 'dosen' ? 'fa-chalkboard-user' : '' }}
+                                        {{ $review->role == 'admin' ? 'fa-user-shield' : '' }}
+                                        {{ $review->role == 'mahasiswa' ? 'fa-user-graduate' : '' }}"></i>
                                 </div>
                                 <div>
-                                    <p class="font-semibold text-gray-800 text-sm">Review dari
-                                        {{ ucfirst($review->role) }}</p>
-                                    <p class="text-xs text-gray-500">{{ $review->user->first_name ?? '-' }}</p>
+                                    <p class="font-semibold text-gray-800 text-sm">Review dari {{ ucfirst($review->role) }}</p>
+                                    <p class="text-xs text-gray-500">{{ $review->user->name ?? '-' }}</p>
                                 </div>
                             </div>
                             @if($review->status)
                             <div class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium
-                    {{ $review->status == 'approved' ? 'bg-green-100 text-green-700' : '' }}
-                    {{ $review->status == 'revisi' ? 'bg-yellow-100 text-yellow-700' : '' }}
-                    {{ $review->status == 'submitted' ? 'bg-blue-100 text-blue-700' : '' }}
-                    {{ $review->status == 'ditolak' ? 'bg-red-100 text-red-700' : '' }}">
+                                {{ $review->status == 'approved' ? 'bg-green-100 text-green-700' : '' }}
+                                {{ $review->status == 'revisi' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                {{ $review->status == 'submitted' ? 'bg-blue-100 text-blue-700' : '' }}
+                                {{ $review->status == 'ditolak' ? 'bg-red-100 text-red-700' : '' }}">
                                 <i class="fas 
-                        {{ $review->status == 'approved' ? 'fa-check-circle' : '' }}
-                        {{ $review->status == 'revisi' ? 'fa-undo-alt' : '' }}
-                        {{ $review->status == 'submitted' ? 'fa-paper-plane' : '' }}
-                        {{ $review->status == 'ditolak' ? 'fa-times-circle' : '' }}"></i>
+                                    {{ $review->status == 'approved' ? 'fa-check-circle' : '' }}
+                                    {{ $review->status == 'revisi' ? 'fa-undo-alt' : '' }}
+                                    {{ $review->status == 'submitted' ? 'fa-paper-plane' : '' }}
+                                    {{ $review->status == 'ditolak' ? 'fa-times-circle' : '' }}"></i>
                                 {{ ucfirst($review->status) }}
                             </div>
                             @endif
@@ -223,53 +265,51 @@
 
                         <!-- Balasan (Replies) -->
                         @if($review->replies && $review->replies->count() > 0)
-                        @foreach($review->replies as $reply)
-                        <div class="mt-3 ml-8 pl-3 border-l-2 border-yellow-400">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div
-                                    class="w-7 h-7 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                    <i class="fas fa-reply text-xs"></i>
+                            @foreach($review->replies as $reply)
+                            <div class="mt-3 ml-8 pl-3 border-l-2 border-yellow-400">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="w-7 h-7 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                        <i class="fas fa-reply text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-700 text-xs">Balasan dari {{ ucfirst($reply->role) }}</p>
+                                        <p class="text-xs text-gray-500">{{ $reply->user->name ?? '-' }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="font-medium text-gray-700 text-xs">Balasan dari
-                                        {{ ucfirst($reply->role) }}</p>
-                                    <p class="text-xs text-gray-500">{{ $reply->user->name ?? '-' }}</p>
-                                </div>
+                                <p class="text-gray-600 text-sm">{{ $reply->komentar }}</p>
+                                <p class="text-right text-xs text-gray-400 mt-1">
+                                    <i class="fas fa-clock mr-1"></i> {{ $reply->created_at->format('d M Y, H:i') }}
+                                </p>
                             </div>
-                            <p class="text-gray-600 text-sm">{{ $reply->komentar }}</p>
-                            <p class="text-right text-xs text-gray-400 mt-1">
-                                <i class="fas fa-clock mr-1"></i> {{ $reply->created_at->format('d M Y, H:i') }}
-                            </p>
-                        </div>
-                        @endforeach
+                            @endforeach
                         @endif
 
                         <!-- Form Balasan untuk SEMUA ROLE KECUALI MAHASISWA -->
                         @if(Auth::user()->role != 'mahasiswa')
-                        @if($replyReviewId == $review->id)
-                        <div class="mt-3 ml-8">
-                            <textarea wire:model="replyText" rows="2"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Tulis balasan Anda..."></textarea>
-                            <div class="flex justify-end gap-2 mt-2">
-                                <button wire:click="setReply(null)"
-                                    class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs transition">
-                                    Batal
-                                </button>
-                                <button wire:click="sendReply({{ $review->id }})"
-                                    class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs transition">
-                                    <i class="fas fa-paper-plane"></i> Kirim
+                            @if($replyReviewId == $review->id)
+                            <div class="mt-3 ml-8">
+                                <textarea wire:model="replyText" rows="2"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Tulis balasan Anda..."></textarea>
+                                <div class="flex justify-end gap-2 mt-2">
+                                    <button wire:click="setReply(null)"
+                                        class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs transition">
+                                        Batal
+                                    </button>
+                                    <button wire:click="sendReply({{ $review->id }})"
+                                        class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs transition">
+                                        <i class="fas fa-paper-plane"></i> Kirim
+                                    </button>
+                                </div>
+                            </div>
+                            @else
+                            <div class="text-right mt-2">
+                                <button wire:click="setReply({{ $review->id }})"
+                                    class="text-xs text-blue-500 hover:text-blue-700">
+                                    <i class="fas fa-reply"></i> Balas Review
                                 </button>
                             </div>
-                        </div>
-                        @else
-                        <div class="text-right mt-2">
-                            <button wire:click="setReply({{ $review->id }})"
-                                class="text-xs text-blue-500 hover:text-blue-700">
-                                <i class="fas fa-reply"></i> Balas Review
-                            </button>
-                        </div>
-                        @endif
+                            @endif
                         @endif
                     </div>
                     @endforeach
@@ -295,21 +335,6 @@
             </div>
             @endif
 
-            <!-- Tombol Revisi untuk Mahasiswa -->
-            @if(Auth::user()->role == 'mahasiswa' && $data['status'] == 'revisi')
-            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-                <div class="p-5">
-                    <div class="flex justify-end">
-                       <a href="{{ url("/{$role}/kegiatan/{$jenisKegiatan}/laporan-harian/{$data['id']}/update") }}" 
-                            wire:navigate
-                            class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition">
-                            <i class="fas fa-undo mr-1"></i> Revisi Laporan
-                        </a>
-                    </div>
-                </div>
-            </div>
-            @endif
-
             <!-- Form Review Laporan -->
             @if($showReviewForm)
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -327,7 +352,6 @@
                     </div>
                 </div>
                 <div class="p-6">
-                    <!-- Status Review (hanya untuk review utama, bukan balasan) -->
                     @if(!$parentId)
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">
@@ -346,7 +370,6 @@
                     </div>
                     @endif
 
-                    <!-- Komentar Review -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">
                             Komentar / Catatan Review <span class="text-red-500">*</span>
@@ -354,24 +377,11 @@
                         <textarea wire:model="reviewKomentar" rows="5"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                             placeholder="Tuliskan komentar, masukan, atau catatan review untuk mahasiswa..."></textarea>
-                        <p class="text-xs text-gray-400 mt-1">
-                            <i class="fas fa-info-circle"></i>
-                            @if($reviewStatus == 'approved')
-                            Berikan apresiasi dan masukan untuk kebaikan kedepannya
-                            @elseif($reviewStatus == 'revisi')
-                            Jelaskan bagian mana yang perlu direvisi secara spesifik
-                            @elseif($reviewStatus == 'ditolak')
-                            Berikan alasan yang jelas mengapa laporan ditolak
-                            @else
-                            Berikan komentar yang konstruktif untuk mahasiswa
-                            @endif
-                        </p>
                         @error('reviewKomentar')
                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Tombol Submit -->
                     <div class="flex justify-end gap-3">
                         <button wire:click="toggleReviewForm"
                             class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition">

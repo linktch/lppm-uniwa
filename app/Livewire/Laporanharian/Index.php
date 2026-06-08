@@ -6,6 +6,8 @@ use App\Models\LaporanHarian;
 use App\Models\Periode;
 use App\Models\ProdiFakultas;
 use App\Models\TimelineKegiatan;
+use App\Models\Sertifikat;
+use App\Services\KegiatanService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -24,19 +26,50 @@ class Index extends Component
     public $filterProdi = '';
     public $perPage = 10;
     public $role;
-    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
+    public $jenisKegiatan;
     public $canCreateLaporan = false;
     public $sisaHari = 0;
     public $timelineMessage = '';
     public $periodeAktif;
     public $timelinePelaksanaan;
     public $deleteId = null;
+    
+    // Property untuk sertifikat
+    public $hasSertifikat = false;
+    public $sertifikatMessage = '';
+    public $periode_id;
+    public $kegiatan_id;
 
-    public function mount($role, $jenisKegiatan = 'KKN') // TAMBAHKAN PARAMETER
+    public function mount($role, $jenisKegiatan = 'KKN')
     {
         $this->role = $role;
         $this->jenisKegiatan = $jenisKegiatan;
+        
+        // Ambil periode_id dan kegiatan_id dari service
+        $this->periode_id = KegiatanService::getPeriodeId();
+        $this->kegiatan_id = KegiatanService::getKegiatanId($this->jenisKegiatan);
+        
+        $this->checkSertifikat();
         $this->checkPeriodeAktif();
+    }
+
+    /**
+     * Cek apakah user sudah memiliki sertifikat
+     */
+    public function checkSertifikat()
+    {
+        $sertifikat = Sertifikat::where('user_id', Auth::id())
+            ->where('periode_id', $this->periode_id)
+            ->where('kegiatan_id', $this->kegiatan_id)
+            ->first();
+        
+        if ($sertifikat) {
+            $this->hasSertifikat = true;
+            $this->sertifikatMessage = '✅ Sertifikat sudah tersedia. Anda dapat membuat laporan harian.';
+        } else {
+            $this->hasSertifikat = false;
+            $this->sertifikatMessage = '❌ Sertifikat belum tersedia. Silakan selesaikan penilaian hafalan terlebih dahulu.';
+        }
     }
 
     /**
@@ -55,7 +88,7 @@ class Index extends Component
             $tglSelesai = Carbon::parse($this->timelinePelaksanaan->tanggal_selesai);
 
             if ($today->between($tglMulai, $tglSelesai)) {
-                $this->canCreateLaporan = true;
+                $this->canCreateLaporan = $this->hasSertifikat; // Hanya bisa buat jika punya sertifikat
                 $this->sisaHari = $today->diffInDays($tglSelesai);
                 $this->timelineMessage = sprintf(
                     '✅ Periode pelaksanaan KKN sedang berlangsung (%s - %s). Sisa waktu: %s hari.',
@@ -89,6 +122,16 @@ class Index extends Component
      */
     public function create()
     {
+        // Cek sertifikat terlebih dahulu
+        if (!$this->hasSertifikat) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Tidak Dapat Membuat Laporan',
+                'text' => 'Sertifikat belum tersedia. Silakan selesaikan penilaian hafalan terlebih dahulu.'
+            ]);
+            return;
+        }
+
         if (!$this->canCreateLaporan) {
             $this->dispatch('swal', [
                 'icon' => 'warning',
@@ -267,6 +310,8 @@ class Index extends Component
             'prodis' => $prodis,
             'role' => $this->role,
             'jenisKegiatan' => $this->jenisKegiatan,
+            'hasSertifikat' => $this->hasSertifikat,
+            'sertifikatMessage' => $this->sertifikatMessage,
         ]);
     }
 }

@@ -97,7 +97,7 @@ class Login extends Component
             $nim = $dataMahasiswa['nim'] ?? null;
 
             // Daftar NIM yang diizinkan
-            $allowedNims = ['20180310111', '20182310014', '20214210032'];
+            $allowedNims = ['20180310111', '20182310014', '20214210032', '20231120304', '20233310053', '20236610458','20232210151'];
 
             // Jika NIM tidak ada dalam daftar yang diizinkan
             if (!in_array($nim, $allowedNims)) {

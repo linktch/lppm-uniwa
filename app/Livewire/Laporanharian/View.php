@@ -16,16 +16,22 @@ class View extends Component
     public $data = [];
     public $reviews = [];
     public $laporanId;
-    public $role; // TAMBAHKAN PROPERTY ROLE
-    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
+    public $role;
+    public $jenisKegiatan;
     public $showReviewForm = false;
     public $reviewStatus = '';
     public $reviewKomentar = '';
     public $parentId = null;
     public $replyText = '';
     public $replyReviewId = null;
+    
+    // Batas waktu revisi
+    public $isExpired = false;
+    public $sisaJam = 0;
+    public $sisaMenit = 0;
+    public $batasWaktuRevisi = null;
 
-    public function mount($role, $jenisKegiatan, $id) // TAMBAHKAN PARAMETER
+    public function mount($role, $jenisKegiatan, $id)
     {
         $this->role = $role;
         $this->jenisKegiatan = $jenisKegiatan;
@@ -56,6 +62,45 @@ class View extends Component
             'foto' => $laporanHarian->foto,
             'created_at' => $laporanHarian->created_at,
         ];
+        
+        // Cek batas waktu revisi jika status revisi
+        if ($this->data['status'] == 'revisi') {
+            $this->checkBatasWaktuRevisi();
+        }
+    }
+    
+    /**
+     * Cek batas waktu revisi (24 jam setelah review terakhir)
+     */
+    public function checkBatasWaktuRevisi()
+    {
+        $lastReview = Review::where('laporan_id', $this->laporanId)
+            ->where('status', 'revisi')
+            ->latest()
+            ->first();
+
+        if ($lastReview && $lastReview->created_at) {
+            $batasWaktu = Carbon::parse($lastReview->created_at)->addHours(24);
+            $now = Carbon::now();
+            
+            $this->batasWaktuRevisi = $batasWaktu;
+            
+            if ($now->greaterThan($batasWaktu)) {
+                $this->isExpired = true;
+                $this->sisaJam = 0;
+                $this->sisaMenit = 0;
+            } else {
+                $this->isExpired = false;
+                $diffInMinutes = $now->diffInMinutes($batasWaktu);
+                $this->sisaJam = floor($diffInMinutes / 60);
+                $this->sisaMenit = $diffInMinutes % 60;
+            }
+        } else {
+            $this->isExpired = false;
+            $this->sisaJam = 24;
+            $this->sisaMenit = 0;
+            $this->batasWaktuRevisi = Carbon::now()->addHours(24);
+        }
     }
 
     public function toggleReviewForm($parentId = null)
@@ -200,6 +245,10 @@ class View extends Component
         return view('livewire.laporanharian.view', [
             'role' => $this->role,
             'jenisKegiatan' => $this->jenisKegiatan,
+            'isExpired' => $this->isExpired,
+            'sisaJam' => $this->sisaJam,
+            'sisaMenit' => $this->sisaMenit,
+            'batasWaktuRevisi' => $this->batasWaktuRevisi,
         ]);
     }
 }
