@@ -4,9 +4,9 @@ namespace App\Livewire\Laporanharian;
 
 use App\Models\KelompokUser;
 use App\Models\LaporanHarian;
-use App\Models\TimelineKegiatan;
-use App\Services\KKNService;
+use App\Services\KegiatanService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -17,158 +17,141 @@ class Create extends Component
 {
     use WithFileUploads;
 
-    // 🔥 SIMPAN YANG PENTING SAJA (ID)
-    public $kelompokId;
-    public $kell;
-    public $role; // TAMBAHKAN PROPERTY ROLE
-    public $jenisKegiatan; // TAMBAHKAN PROPERTY JENIS KEGIATAN
-    // form
+    public $role;
+    public $jenisKegiatan;
+    public $periode_id;
+    public $kegiatan_id;
+    public $kelompok_id;
     public $tanggal;
     public $jam;
     public $narasi;
-    public $catatan;
     public $foto;
+    public $oldFoto;
     public $isEditing = false;
-    public $laporanId = null;
-    public $periodeAktif;
-    public $kegiatan;
-    // ✅ Timeline properties
-    public $timelinePelaksanaan;
-    public $canCreateLaporan = false;
-    public $timelineMessage = '';
-    public $sisaHari = 0;
+    public $laporanId;
 
-    public function mount($role, $jenisKegiatan, $id = null) // TAMBAHKAN PARAMETER
+    // Auto-save key
+    protected $autoSaveKey = 'laporan_harian_draft';
+
+    public function mount($role, $jenisKegiatan, $id = null)
     {
         $this->role = $role;
         $this->jenisKegiatan = $jenisKegiatan;
-        
-        // default tanggal & jam
-        $this->tanggal = now()->toDateString();
-        $this->jam = now()->format('H:i');
+        $this->periode_id = KegiatanService::getPeriodeId();
+        $this->kegiatan_id = KegiatanService::getKegiatanId($jenisKegiatan);
 
-        // ✅ Ambil dari service KKN berdasarkan jenis kegiatan
-        $this->periodeAktif = $this->getPeriodeAktif($jenisKegiatan);
-        $this->kegiatan = $this->getKegiatan($jenisKegiatan);
-
-        if (!$this->periodeAktif || !$this->kegiatan) {
-            abort(404, 'Periode atau kegiatan KKN tidak ditemukan');
-        }
-
-        // ✅ Load timeline untuk validasi
-        $this->loadTimeline();
-
-        // ✅ Validasi timeline sebelum melanjutkan
-        if (!$this->canCreateLaporan && !$id) {
-            session()->flash('error', $this->timelineMessage);
-            return redirect()->route('kegiatan.laporanharian.index', [
-                'role' => $role,
-                'jenisKegiatan' => $jenisKegiatan
-            ]);
-        }
-
-        // ambil kelompok user (hanya untuk ambil ID)
-        $kelompokUser = KelompokUser::with('kelompok')
-            ->where('user_id', auth()->id())
-            ->whereHas('kelompok', fn($q) =>
-                $q
-                    ->where('periode_id', $this->periodeAktif->id)
-                    ->where('kegiatan_id', $this->kegiatan->id))
+        // Ambil kelompok user
+        $kelompokUser = KelompokUser::where('user_id', Auth::id())
+            ->where('role', 'mahasiswa')
             ->first();
+        $this->kelompok_id = $kelompokUser?->kelompok_id;
 
-        $this->kelompokId = $kelompokUser?->kelompok?->id;
+        // Set tanggal default = hari ini
+        $this->tanggal = date('Y-m-d');
+        $this->jam = date('H:i');
 
-        if (!$this->kelompokId) {
-            abort(404, 'Kelompok KKN tidak ditemukan');
-        }
-
-        // 🔥 MODE EDIT
+        // Jika ada ID, berarti mode edit
         if ($id) {
-            $laporan = LaporanHarian::findOrFail($id);
-
-            // ✅ Validasi kepemilikan laporan
-            if ($laporan->user_id != auth()->id()) {
-                abort(403, 'Anda tidak memiliki akses untuk mengedit laporan ini.');
-            }
-
-            // ✅ Validasi timeline untuk edit
-            if (!$this->canCreateLaporan) {
-                session()->flash('error', 'Tidak dapat mengedit laporan karena periode pelaksanaan sudah berakhir.');
-                return redirect()->route('kegiatan.laporanharian.index', [
-                    'role' => $role,
-                    'jenisKegiatan' => $jenisKegiatan
-                ]);
-            }
-
             $this->isEditing = true;
             $this->laporanId = $id;
-
-            $this->tanggal = Carbon::parse($laporan->tanggal)->toDateString();
-            $this->jam = Carbon::parse($laporan->tanggal)->format('H:i');
-            $this->narasi = $laporan->aktivitas;
-            $this->catatan = $laporan->catatan;
-            $this->foto = $laporan->foto;
+            $this->loadLaporan();
+        } else {
+            // Cek auto-save di localStorage (via JavaScript)
+            $this->dispatch('checkAutoSave', key: $this->autoSaveKey);
         }
     }
-    
-    // TAMBAHKAN METHOD untuk mendapatkan periode aktif berdasarkan jenis kegiatan
-    private function getPeriodeAktif($jenisKegiatan)
+
+    public function loadLaporan()
     {
-        // Sesuaikan dengan service atau model Anda
-        return KKNService::periode();
-    }
-    
-    // TAMBAHKAN METHOD untuk mendapatkan kegiatan berdasarkan jenis kegiatan
-    private function getKegiatan($jenisKegiatan)
-    {
-        // Sesuaikan dengan service atau model Anda
-        return KKNService::kegiatan($jenisKegiatan);
+        $laporan = LaporanHarian::where('id', $this->laporanId)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $this->tanggal = $laporan->tanggal ? Carbon::parse($laporan->tanggal)->format('Y-m-d') : date('Y-m-d');
+        $this->jam = $laporan->jam ?? date('H:i');
+        $this->narasi = $laporan->aktivitas;
+        $this->oldFoto = $laporan->foto;
     }
 
-    // =========================
-    // LOAD TIMELINE PELAKSANAAN
-    // =========================
-    protected function loadTimeline()
+    public function updateTanggal()
     {
-        // Ambil timeline dengan jenis 'pelaksanaan' untuk periode dan kegiatan ini
-        $this->timelinePelaksanaan = TimelineKegiatan::where('periode_id', $this->periodeAktif->id)
-            ->where('kegiatan_id', $this->kegiatan->id)
-            ->where('jenis', 'pelaksanaan')
-            ->first();
+        // Method untuk update tanggal (dipanggil saat tanggal berubah)
+    }
 
-        if ($this->timelinePelaksanaan) {
-            $today = Carbon::today();
-            $tanggalMulai = Carbon::parse($this->timelinePelaksanaan->tanggal_mulai);
-            $tanggalSelesai = Carbon::parse($this->timelinePelaksanaan->tanggal_selesai);
+    public function saveLaporan()
+    {
+        // Di method saveLaporan()
+        $this->validate([
+            'tanggal' => 'required|date',
+            'jam' => 'required',
+            'narasi' => 'required|min:500',
+            'foto' => $this->isEditing ? 'nullable|image|mimes:jpg,jpeg,png|max:1024' : 'required|image|mimes:jpg,jpeg,png|max:1024',
+            // max:1024 = 1MB
+        ], [
+            'tanggal.required' => 'Tanggal wajib diisi',
+            'jam.required' => 'Jam wajib diisi',
+            'narasi.required' => 'Narasi kegiatan wajib diisi',
+            'narasi.min' => 'Narasi kegiatan minimal 500 karakter',
+            'foto.required' => 'Foto dokumentasi wajib diupload',
+            'foto.image' => 'File harus berupa gambar',
+            'foto.mimes' => 'Format gambar harus JPG, JPEG, atau PNG',
+            'foto.max' => 'Ukuran gambar maksimal 1MB',
+        ]);
 
-            if ($today->between($tanggalMulai, $tanggalSelesai)) {
-                $this->canCreateLaporan = true;
-                $this->timelineMessage = 'Periode pelaksanaan KKN: '
-                    . $tanggalMulai->format('d/m/Y') . ' - '
-                    . $tanggalSelesai->format('d/m/Y');
+        try {
+            $fotoPath = $this->oldFoto;
 
-                // Hitung sisa hari
-                $this->sisaHari = $today->diffInDays($tanggalSelesai, false);
-                if ($this->sisaHari > 0) {
-                    $this->timelineMessage .= " | Sisa {$this->sisaHari} hari";
+            if ($this->foto && !is_string($this->foto)) {
+                if ($fotoPath && Storage::disk('public')->exists($fotoPath)) {
+                    Storage::disk('public')->delete($fotoPath);
                 }
-            } elseif ($today->lt($tanggalMulai)) {
-                $this->canCreateLaporan = false;
-                $this->timelineMessage = 'Pelaksanaan KKN akan dimulai pada: '
-                    . $tanggalMulai->format('d/m/Y');
-            } else {
-                $this->canCreateLaporan = false;
-                $this->timelineMessage = 'Periode pelaksanaan KKN telah berakhir pada: '
-                    . $tanggalSelesai->format('d/m/Y');
+                $fotoPath = $this->foto->store('laporan-harian', 'public');
             }
-        } else {
-            $this->canCreateLaporan = false;
-            $this->timelineMessage = 'Timeline pelaksanaan KKN belum ditentukan. Silahkan hubungi administrator.';
+
+            $dateTime = Carbon::parse($this->tanggal . ' ' . $this->jam);
+
+            if ($this->isEditing) {
+                LaporanHarian::where('id', $this->laporanId)->update([
+                    'tanggal' => $dateTime,
+                    'jam' => $this->jam,
+                    'aktivitas' => $this->narasi,
+                    'foto' => $fotoPath,
+                ]);
+                $message = 'Laporan berhasil diupdate';
+            } else {
+                LaporanHarian::create([
+                    'user_id' => Auth::id(),
+                    'kelompok_id' => $this->kelompok_id,
+                    'periode_id' => $this->periode_id,
+                    'kegiatan_id' => $this->kegiatan_id,
+                    'tanggal' => $dateTime,
+                    'jam' => $this->jam,
+                    'aktivitas' => $this->narasi,
+                    'foto' => $fotoPath,
+                    'status' => 'submitted',
+                ]);
+                $message = 'Laporan berhasil disimpan';
+            }
+
+            // Hapus auto-save setelah berhasil
+            $this->dispatch('clearAutoSave', key: $this->autoSaveKey);
+
+            session()->flash('success', $message);
+            return redirect()->route('kegiatan.laporanharian.index', [
+                'role' => $this->role,
+                'jenisKegiatan' => $this->jenisKegiatan
+            ]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
     public function removeFoto()
     {
+        if ($this->oldFoto && Storage::disk('public')->exists($this->oldFoto)) {
+            Storage::disk('public')->delete($this->oldFoto);
+        }
+        $this->oldFoto = null;
         $this->foto = null;
     }
 
@@ -180,121 +163,8 @@ class Create extends Component
         ]);
     }
 
-    public function saveLaporan()
-    {
-        // ✅ Validasi timeline lagi sebelum save
-        if (!$this->canCreateLaporan && !$this->isEditing) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Gagal!',
-                'text' => $this->timelineMessage
-            ]);
-            return;
-        }
-
-        $this->validate([
-            'tanggal' => 'required|date',
-            'jam' => 'required|date_format:H:i',
-            'narasi' => 'required|min:500',
-            'foto' => $this->isEditing ? 'nullable|image|max:2048' : 'required|image|max:2048',
-        ]);
-
-        // gabungkan tanggal + jam
-        $datetime = Carbon::parse($this->tanggal . ' ' . $this->jam);
-
-        // ✅ Validasi tanggal tidak boleh melebihi tanggal selesai timeline
-        if ($this->timelinePelaksanaan && $datetime->gt(Carbon::parse($this->timelinePelaksanaan->tanggal_selesai))) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Gagal!',
-                'text' => 'Tanggal laporan melebihi periode pelaksanaan KKN.'
-            ]);
-            return;
-        }
-
-        // ✅ Validasi tanggal tidak boleh kurang dari tanggal mulai timeline
-        if ($this->timelinePelaksanaan && $datetime->lt(Carbon::parse($this->timelinePelaksanaan->tanggal_mulai))) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Gagal!',
-                'text' => 'Tanggal laporan belum memasuki periode pelaksanaan KKN.'
-            ]);
-            return;
-        }
-
-        // 🔥 upload foto
-        $pathFoto = null;
-
-        if ($this->foto && !is_string($this->foto)) {
-            $pathFoto = $this->foto->store('laporan/kkn', 'public');
-        }
-
-        // 🔥 update / create
-        if ($this->isEditing) {
-            $laporan = LaporanHarian::findOrFail($this->laporanId);
-
-            if ($pathFoto && $laporan->foto) {
-                Storage::disk('public')->delete($laporan->foto);
-            }
-
-            $laporan->update([
-                'tanggal' => $datetime,
-                'aktivitas' => $this->narasi,
-                'catatan' => $this->catatan,
-                'foto' => $pathFoto ?? $laporan->foto,
-                'status' => 'submitted',
-                'periode_id' => $this->periodeAktif->id,
-                'kegiatan_id' => $this->kegiatan->id,
-            ]);
-
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => 'Berhasil!',
-                'text' => 'Laporan harian berhasil diperbarui'
-            ]);
-        } else {
-            LaporanHarian::create([
-                'user_id' => auth()->id(),
-                'kelompok_id' => $this->kelompokId,
-                'tanggal' => $datetime,
-                'aktivitas' => $this->narasi,
-                'catatan' => $this->catatan,
-                'foto' => $pathFoto,
-                'status' => 'submitted',
-                'periode_id' => $this->periodeAktif->id,
-                'kegiatan_id' => $this->kegiatan->id,
-            ]);
-            $this->reset(['tanggal', 'jam', 'narasi', 'foto']);
-
-            $this->dispatch('swal-and-redirect', [
-                'icon' => 'success',
-                'title' => 'Berhasil!',
-                'text' => 'Laporan harian berhasil disimpan',
-                'url' => route('kegiatan.laporanharian.index', [
-                    'role' => $this->role,
-                    'jenisKegiatan' => $this->jenisKegiatan
-                ])
-            ]);
-
-            return;
-        }
-
-        // Kembali ke halaman index
-        return redirect()->route('kegiatan.laporanharian.index', [
-            'role' => $this->role,
-            'jenisKegiatan' => $this->jenisKegiatan
-        ]);
-    }
-
     public function render()
     {
-        return view('livewire.laporanharian.create', [
-            'timelinePelaksanaan' => $this->timelinePelaksanaan,
-            'canCreateLaporan' => $this->canCreateLaporan,
-            'timelineMessage' => $this->timelineMessage,
-            'sisaHari' => $this->sisaHari,
-            'role' => $this->role,
-            'jenisKegiatan' => $this->jenisKegiatan,
-        ]);
+        return view('livewire.laporanharian.create');
     }
 }
